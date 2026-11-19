@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>لوحة الأستاذ</title><link rel="stylesheet" href="style.css">
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#173b67">
+</head>
+<body>
+<header class="top"><div class="brand">∑ <span>لوحة الأستاذ</span></div><a href="index.html" class="teacher-link">صفحة التلميذ</a></header>
+<main class="wrap wide">
+<section class="hero"><span class="eyebrow">إدارة الاختبار والنتائج</span><h1>لوحة تحكم الأستاذ</h1><p>إدارة الأسئلة ومتابعة إجابات التلاميذ وترتيبهم.</p></section>
+<section id="loginCard" class="panel narrow"><h2>تسجيل دخول الأستاذ</h2><label>البريد الإلكتروني<input id="email" type="email" placeholder="teacher@example.com"></label><label>كلمة المرور<input id="password" type="password" placeholder="كلمة المرور"></label><button id="loginBtn" class="primary">دخول</button><p class="muted small">أنشئ حساب الأستاذ أولاً من Firebase Authentication (Email/Password).</p></section>
+<div id="dashboard" class="hidden">
+<div class="toolbar"><div><h2>النتائج والترتيب</h2><p class="muted small">العلامة محسوبة على 16 للأسئلة الاختيارية فقط.</p></div><button id="logoutBtn" class="secondary">تسجيل الخروج</button></div>
+<section class="stats"><div class="stat"><b id="countAll">0</b><span>عدد المشاركات</span></div><div class="stat"><b id="avgScore">—</b><span>متوسط العلامات</span></div><div class="stat"><b id="topScore">—</b><span>أعلى علامة</span></div></section>
+<section class="panel"><div class="toolbar"><h2>قائمة الترتيب</h2><button id="refreshBtn" class="secondary">تحديث النتائج</button></div><div class="table-scroll"><table><thead><tr>
+    <th>الترتيب</th>
+    <th>اسم التلميذ</th>
+    <th>علامة الاختيار المتعدد / 16</th>
+    <th>علامة الحلول الكتابية / 4</th>
+    <th>العلامة النهائية / 20</th>
+    <th>تاريخ المشاركة</th>
+    <th>عرض الصور</th>
+  </tr></thead><tbody id="resultsBody"><tr><td colspan="5">لا توجد نتائج بعد.</td></tr></tbody></table></div></section>
+<section class="panel"><h2>إعداد الاختبار</h2><p class="muted small">يمكنك تعديل نصوص الأسئلة والخيارات والإجابة الصحيحة. يجب أن يكون عدد أسئلة الاختيار 16 والأسئلة المصورة 4.</p><div id="editor"></div><button id="saveQuizBtn" class="primary">حفظ الأسئلة</button><span id="saveStatus" class="muted small"></span></section>
+</div>
+<div id="notice" class="notice hidden"></div>
+</main><footer>لوحة الأستاذ — بيانات الاختبار محفوظة في Firebase</footer>
+<script type="module" src="admin.js"></script>
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./service-worker.js")
+      .catch(error => console.error("PWA error:", error));
+  });
+}
+</script>
+</body></html>

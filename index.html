@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>اختبار الرياضيات الإلكتروني</title>
+<link rel="stylesheet" href="style.css">
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#173b67">
+</head>
+<body>
+<header class="top"><div class="brand">∑ <span>اختبار الرياضيات</span></div><a href="admin.html" class="teacher-link">دخول الأستاذ</a></header>
+<main class="wrap">
+<section class="hero"><span class="eyebrow">منصة الاختبارات المدرسية</span><h1>اختبار الرياضيات الإلكتروني</h1><p>أجب عن الأسئلة بعناية، ثم أرسل إجاباتك إلى الأستاذ.</p></section>
+<section id="startCard" class="panel">
+<h2>بيانات التلميذ</h2>
+<label>الاسم واللقب الكامل<input id="studentName" maxlength="100" placeholder="اكتب اسمك ولقبك" autocomplete="name"><label for="studentClass">Choose your class:</label>
+
+<select id="studentClass" required>
+  <option value="">-- Select your class --</option>
+  <option value="Class 9">Class 9</option>
+  <option value="Class 10">Class 10</option>
+  <option value="Class 11">Class 11</option>
+  <option value="Class 12">Class 12</option>
+</select></label>
+<button id="startBtn" class="primary">ابدأ الاختبار <span>←</span></button>
+<p class="muted small">يتكون الاختبار من 20 سؤالاً: 16 اختياراً من متعدد و4 أسئلة تتطلب إرفاق صورة الحل.</p>
+</section>
+<section id="quizCard" class="panel hidden">
+<div class="quiz-head"><div><span class="muted small">التلميذ</span><strong id="nameLabel"></strong></div><span class="counter" id="progress">1 / 20</span></div>
+<div class="progress"><div id="progressBar"></div></div>
+<div id="questions"></div>
+<div class="actions"><button id="prevBtn" class="secondary">السابق</button><button id="nextBtn" class="primary">التالي</button><button id="submitBtn" class="primary hidden">إرسال الإجابات</button></div>
+<p class="muted small">تأكد من إرفاق صور الأسئلة الأربعة قبل الإرسال. لا يمكنك تعديل الإجابات بعد الإرسال.</p>
+</section>
+<section id="doneCard" class="panel hidden center"><div class="success-icon">✓</div><h2>تم إرسال إجاباتك بنجاح</h2><p id="doneText">وصلت إجاباتك إلى الأستاذ.</p><p class="muted small">شكراً لمشاركتك. يمكنك إغلاق هذه الصفحة.</p></section>
+<div id="notice" class="notice hidden"></div>
+</main>
+<footer>منصة تعليمية للاختبارات — نسخة أولية</footer>
+<script type="module" src="student.js"></script>
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./service-worker.js")
+      .catch(error => console.error("PWA error:", error));
+  });
+}
+</script>
+</body></html>
