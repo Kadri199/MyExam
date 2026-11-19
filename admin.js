@@ -3,7 +3,8 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/fireba
 
 import {
   getFirestore, doc, getDoc, setDoc,
-  collection, getDocs, query, orderBy
+  collection, getDocs, query, orderBy,
+  updateDoc, deleteField
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 import {
@@ -21,9 +22,6 @@ const $ = id => document.getElementById(id);
 let quiz = null;
 let submissions = [];
 let selectedClass = "Class 9";
-
-// Temporary marks: never saved in Firebase
-const manualMarks = {};
 
 const classes = ["Class 9", "Class 10", "Class 11", "Class 12"];
 
@@ -243,7 +241,8 @@ function renderClassRanking() {
 
   $("resultsBody").innerHTML = classResults.length
     ? classResults.map((s, i) => {
-        const manual = manualMarks[s.id] ?? "";
+        const manual = s.handwrittenMark ?? "";
+
         const final = manual === ""
           ? "—"
           : (Number(s.score || 0) + Number(manual)).toFixed(2);
@@ -295,34 +294,92 @@ function renderClassRanking() {
         </tr>
       `;
 
-  // Calculate final mark immediately
+  // Calculate final mark immediately while typing
   document.querySelectorAll("[data-mark]").forEach(input => {
+
     input.addEventListener("input", () => {
       const id = input.dataset.mark;
       const value = input.value.trim();
 
-      if (value === "") {
-        delete manualMarks[id];
-      } else {
-        const n = Number(value);
-
-        if (!Number.isFinite(n) || n < 0 || n > 4) {
-          input.setCustomValidity("أدخل علامة بين 0 و4");
-          input.reportValidity();
-          return;
-        }
-
-        input.setCustomValidity("");
-        manualMarks[id] = n;
-      }
-
       const student = submissions.find(s => s.id === id);
       const finalCell = document.querySelector(`[data-final="${id}"]`);
 
-      if (finalCell) {
-        finalCell.textContent = value === ""
-          ? "—"
-          : (Number(student?.score || 0) + Number(value)).toFixed(2);
+      if (!finalCell) return;
+
+      if (value === "") {
+        finalCell.textContent = "—";
+        input.setCustomValidity("");
+        return;
+      }
+
+      const n = Number(value);
+
+      if (!Number.isFinite(n) || n < 0 || n > 4) {
+        input.setCustomValidity("أدخل علامة بين 0 و4");
+        return;
+      }
+
+      input.setCustomValidity("");
+
+      finalCell.textContent =
+        (Number(student?.score || 0) + n).toFixed(2);
+    });
+
+    // Permanently save the mark when editing is finished
+    input.addEventListener("change", async () => {
+      const id = input.dataset.mark;
+      const value = input.value.trim();
+
+      const student = submissions.find(s => s.id === id);
+
+      if (!student) return;
+
+      if (value === "") {
+        try {
+          input.disabled = true;
+
+          await updateDoc(doc(db, "submissions", id), {
+            handwrittenMark: deleteField()
+          });
+
+          delete student.handwrittenMark;
+
+          notice("تم حذف علامة الحلول الكتابية.");
+
+        } catch (error) {
+          notice("تعذر حذف العلامة: " + error.message);
+        } finally {
+          input.disabled = false;
+        }
+
+        return;
+      }
+
+      const n = Number(value);
+
+      if (!Number.isFinite(n) || n < 0 || n > 4) {
+        input.setCustomValidity("أدخل علامة بين 0 و4");
+        input.reportValidity();
+        return;
+      }
+
+      input.setCustomValidity("");
+
+      try {
+        input.disabled = true;
+
+        await updateDoc(doc(db, "submissions", id), {
+          handwrittenMark: n
+        });
+
+        student.handwrittenMark = n;
+
+        notice("تم حفظ علامة الحلول الكتابية بنجاح.");
+
+      } catch (error) {
+        notice("تعذر حفظ العلامة: " + error.message);
+      } finally {
+        input.disabled = false;
       }
     });
   });
@@ -339,17 +396,18 @@ function printClass() {
     .sort((a, b) => (b.score ?? 0) - (a.score ?? 0));
 
   const rows = classResults.map((s, i) => {
-    const manual = manualMarks[s.id];
-    const final = manual === undefined
+    const manual = s.handwrittenMark ?? "";
+
+    const final = manual === ""
       ? "—"
-      : (Number(s.score || 0) + manual).toFixed(2);
+      : (Number(s.score || 0) + Number(manual)).toFixed(2);
 
     return `
       <tr>
         <td>${i + 1}</td>
         <td>${esc(s.name)}</td>
         <td>${s.score ?? "—"}</td>
-        <td>${manual === undefined ? "—" : manual}</td>
+        <td>${manual === "" ? "—" : manual}</td>
         <td>${final}</td>
       </tr>
     `;
