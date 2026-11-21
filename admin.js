@@ -77,7 +77,6 @@ async function loadQuiz() {
         ]
       };
 
-  // Keep only one handwritten question.
   const firstImageQuestion = Array.isArray(quiz.imageQuestions)
     ? quiz.imageQuestions[0]
     : null;
@@ -91,6 +90,32 @@ async function loadQuiz() {
   renderEditor();
 }
 
+// Mathematical editor helper
+function mathEditor(key) {
+  return `
+    <div style="margin:8px 0 15px;padding:10px;background:#f5f7fa;border-radius:8px;">
+      <div style="font-size:13px;margin-bottom:7px;">
+        أداة إدراج عبارة رياضية:
+      </div>
+
+      <math-field
+        data-math-key="${key}"
+        virtual-keyboard-mode="manual"
+        style="display:block;width:100%;min-height:48px;padding:8px;border:1px solid #ccc;border-radius:6px;background:white;"
+      ></math-field>
+
+      <button
+        type="button"
+        class="secondary"
+        data-insert-math="${key}"
+        style="margin-top:7px;"
+      >
+        إدراج العبارة في النص
+      </button>
+    </div>
+  `;
+}
+
 function renderEditor() {
   let html = "";
 
@@ -98,18 +123,37 @@ function renderEditor() {
     html += `
       <div class="editor-q">
         <h3>السؤال ${i + 1} — اختيار من متعدد</h3>
+
         <label>
           نص السؤال
-          <textarea rows="2" data-q="${i}" data-field="q">${esc(q.q)}</textarea>
+          <textarea
+            rows="3"
+            data-q="${i}"
+            data-field="q"
+            data-editor-key="q-${i}"
+          >${esc(q.q)}</textarea>
         </label>
+
+        ${mathEditor(`q-${i}`)}
+
         <div class="grid">
           ${q.options.map((o, j) => `
-            <label>
-              الخيار ${j + 1}
-              <input data-q="${i}" data-option="${j}" value="${esc(o)}">
-            </label>
+            <div>
+              <label>
+                الخيار ${j + 1}
+                <textarea
+                  rows="2"
+                  data-q="${i}"
+                  data-option="${j}"
+                  data-editor-key="o-${i}-${j}"
+                >${esc(o)}</textarea>
+              </label>
+
+              ${mathEditor(`o-${i}-${j}`)}
+            </div>
           `).join("")}
         </div>
+
         <label>
           الإجابة الصحيحة
           <select data-q="${i}" data-field="correct">
@@ -128,20 +172,69 @@ function renderEditor() {
     html += `
       <div class="editor-q">
         <h3>السؤال ${i + 17} — إجابة بصورة</h3>
+
         <label>
           نص السؤال
-          <textarea rows="2" data-imgq="${i}">${esc(q.q)}</textarea>
+          <textarea
+            rows="3"
+            data-imgq="${i}"
+            data-editor-key="img-${i}"
+          >${esc(q.q)}</textarea>
         </label>
+
+        ${mathEditor(`img-${i}`)}
       </div>
     `;
   });
 
   $("editor").innerHTML = html;
+
+  // Insert the LaTeX expression into the selected text field.
+  document.querySelectorAll("[data-insert-math]").forEach(button => {
+    button.onclick = () => {
+      const key = button.dataset.insertMath;
+
+      const formula = document.querySelector(
+        `[data-math-key="${key}"]`
+      );
+
+      const target = document.querySelector(
+        `[data-editor-key="${key}"]`
+      );
+
+      if (!formula || !target) return;
+
+      const latex = formula.value.trim();
+
+      if (!latex) {
+        notice("أدخل العبارة الرياضية أولاً.");
+        return;
+      }
+
+      const expression = ` \\(${latex}\\) `;
+
+      const start = target.selectionStart ?? target.value.length;
+      const end = target.selectionEnd ?? target.value.length;
+
+      target.value =
+        target.value.slice(0, start) +
+        expression +
+        target.value.slice(end);
+
+      const cursor = start + expression.length;
+      target.focus();
+      target.setSelectionRange(cursor, cursor);
+
+      formula.value = "";
+      $("notice").classList.add("hidden");
+    };
+  });
 }
 
 $("saveQuizBtn").onclick = async () => {
   document.querySelectorAll("[data-q][data-field]").forEach(el => {
     const i = +el.dataset.q;
+
     quiz.mcq[i][el.dataset.field] =
       el.dataset.field === "correct" ? +el.value : el.value;
   });
@@ -164,7 +257,6 @@ $("saveQuizBtn").onclick = async () => {
 
 $("refreshBtn").onclick = loadResults;
 
-// Class buttons and print button
 function createClassFilters() {
   if ($("classFilters")) return;
 
@@ -200,8 +292,6 @@ function createClassFilters() {
   $("printClassBtn").onclick = printClass;
 }
 
-// Load submissions
-
 async function loadResults() {
   try {
     const snap = await getDocs(
@@ -216,7 +306,6 @@ async function loadResults() {
       ...d.data()
     }));
 
-    // Synchronize existing submissions with the public ranking.
     await Promise.all(
       submissions.map(student =>
         setDoc(
@@ -239,8 +328,6 @@ async function loadResults() {
   }
 }
 
-
-// Render selected class
 function renderClassRanking() {
   const classResults = submissions
     .filter(s => s.studentClass === selectedClass)
@@ -253,7 +340,6 @@ function renderClassRanking() {
   });
 
   $("printClassBtn").textContent = `🖨 طباعة نتائج ${selectedClass}`;
-
   $("countAll").textContent = classResults.length;
 
   $("avgScore").textContent = classResults.length
@@ -322,9 +408,7 @@ function renderClassRanking() {
         </tr>
       `;
 
-  // Calculate final mark immediately while typing
   document.querySelectorAll("[data-mark]").forEach(input => {
-
     input.addEventListener("input", () => {
       const id = input.dataset.mark;
       const value = input.value.trim();
@@ -353,11 +437,9 @@ function renderClassRanking() {
         (Number(student?.score || 0) + n).toFixed(2);
     });
 
-    // Permanently save the mark when editing is finished
     input.addEventListener("change", async () => {
       const id = input.dataset.mark;
       const value = input.value.trim();
-
       const student = submissions.find(s => s.id === id);
 
       if (!student) return;
@@ -371,7 +453,6 @@ function renderClassRanking() {
           });
 
           delete student.handwrittenMark;
-
           notice("تم حذف علامة الحلول الكتابية.");
 
         } catch (error) {
@@ -401,7 +482,6 @@ function renderClassRanking() {
         });
 
         student.handwrittenMark = n;
-
         notice("تم حفظ علامة الحلول الكتابية بنجاح.");
 
       } catch (error) {
@@ -417,7 +497,6 @@ function renderClassRanking() {
   });
 }
 
-// Print selected class in Arabic
 function printClass() {
   const classResults = submissions
     .filter(s => s.studentClass === selectedClass)
@@ -505,10 +584,7 @@ function printClass() {
   w.document.close();
 }
 
-// View student photos
-
 async function showDetails(id) {
-  // Remove an old viewer if one is already open.
   document.getElementById("photoViewerModal")?.remove();
 
   const student = submissions.find(s => s.id === id);
@@ -631,7 +707,6 @@ async function showDetails(id) {
     content.textContent = "حدث خطأ أثناء تحميل الصورة. حاول مجدداً.";
   }
 }
-
 
 function esc(s) {
   return String(s ?? "").replace(/[&<>"']/g, c => ({
