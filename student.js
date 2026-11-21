@@ -18,7 +18,7 @@ const $ = id => document.getElementById(id);
 
 let quiz, name = "", studentClass = "", page = 0;
 let answers = {};
-let files = {};
+let answerFile = null;
 
 const defaultQuiz = {
   title: "اختبار الرياضيات",
@@ -27,9 +27,9 @@ const defaultQuiz = {
     options: ["الخيار الأول", "الخيار الثاني", "الخيار الثالث"],
     correct: 0
   })),
-  imageQuestions: Array.from({ length: 4 }, (_, i) => ({
-    q: `السؤال ${i + 17} — أرفق صورة الحل`
-  }))
+  imageQuestions: [
+    { q: "السؤال 17 — أرفق صورة الحل الكامل" }
+  ]
 };
 
 function notice(message) {
@@ -47,6 +47,15 @@ function esc(value) {
 async function loadQuiz() {
   const snap = await getDoc(doc(db, "settings", "quiz"));
   quiz = snap.exists() ? snap.data() : defaultQuiz;
+
+  if (!Array.isArray(quiz.mcq) || quiz.mcq.length !== 16) {
+    throw new Error("يجب أن يحتوي الاختبار على 16 سؤال اختيار من متعدد.");
+  }
+
+  if (!Array.isArray(quiz.imageQuestions) ||
+      !quiz.imageQuestions.length) {
+    quiz.imageQuestions = defaultQuiz.imageQuestions;
+  }
 }
 
 $("startBtn").onclick = async () => {
@@ -82,7 +91,7 @@ $("startBtn").onclick = async () => {
   }
 };
 
-// Compress image in the browser, without any paid service.
+// Compress the single handwritten solution photo.
 async function compressImage(file) {
   if (!file || !file.type.startsWith("image/")) {
     throw new Error("الملف المختار ليس صورة.");
@@ -91,7 +100,7 @@ async function compressImage(file) {
   const image = await createImageBitmap(file);
   const canvas = document.createElement("canvas");
 
-  const maxSide = 1000;
+  const maxSide = 1200;
   const scale = Math.min(1, maxSide / Math.max(image.width, image.height));
 
   canvas.width = Math.round(image.width * scale);
@@ -118,7 +127,7 @@ async function compressImage(file) {
   } while (blob.size > 500 * 1024 && quality >= 0.25);
 
   if (blob.size > 500 * 1024) {
-    throw new Error("الصورة كبيرة جداً. اختر صورة أصغر أو أوضح.");
+    throw new Error("الصورة كبيرة جداً. اختر صورة أصغر.");
   }
 
   return await new Promise((resolve, reject) => {
@@ -130,8 +139,8 @@ async function compressImage(file) {
 }
 
 function render() {
-  $("progress").textContent = `${page + 1} / 20`;
-  $("progressBar").style.width = `${((page + 1) / 20) * 100}%`;
+  $("progress").textContent = `${page + 1} / 17`;
+  $("progressBar").style.width = `${((page + 1) / 17) * 100}%`;
 
   let html = "";
 
@@ -155,43 +164,47 @@ function render() {
       </div>`;
 
   } else {
-    const n = page - 16;
-    const q = quiz.imageQuestions[n];
+    const q = quiz.imageQuestions[0];
 
     html = `
       <div class="question">
         <p class="qtitle">
-          ${page + 1}. ${esc(q.q)}
-          <span class="qtype">— إجابة بصورة</span>
+          17. ${esc(q.q)}
+          <span class="qtype">— السؤال التطبيقي (4 نقاط)</span>
         </p>
 
         <div class="filebox">
-          <label>اختر صورة واضحة للحل
+          <label>اختر صورة واضحة للحل الكامل
             <input type="file" id="answerFile"
               accept="image/*" capture="environment">
           </label>
 
           <span class="muted small" id="fileStatus">
-            ${files[n] ? "تم اختيار صورة" : "لم يتم اختيار صورة بعد"}
+            ${answerFile ? "تم اختيار صورة" : "لم يتم اختيار صورة بعد"}
           </span>
         </div>
+
+        <p class="muted small">
+          أرسل صورة واحدة تحتوي على الحل الكامل للسؤال.
+          تأكد من وضوح الكتابة قبل الإرسال.
+        </p>
       </div>`;
   }
 
   $("questions").innerHTML = html;
 
-  if (page >= 16) {
+  if (page === 16) {
     $("answerFile").onchange = event => {
-      files[page - 16] = event.target.files[0];
+      answerFile = event.target.files[0] || null;
 
       $("fileStatus").textContent =
-        files[page - 16]?.name || "لم يتم اختيار صورة";
+        answerFile?.name || "لم يتم اختيار صورة";
     };
   }
 
   $("prevBtn").disabled = page === 0;
-  $("nextBtn").classList.toggle("hidden", page === 19);
-  $("submitBtn").classList.toggle("hidden", page !== 19);
+  $("nextBtn").classList.toggle("hidden", page === 16);
+  $("submitBtn").classList.toggle("hidden", page !== 16);
 }
 
 $("nextBtn").onclick = () => {
@@ -206,10 +219,6 @@ $("nextBtn").onclick = () => {
     }
 
     answers[page] = Number(selected.value);
-
-  } else if (!files[page - 16]) {
-    notice("يرجى إرفاق صورة الحل لهذا السؤال.");
-    return;
   }
 
   page++;
@@ -242,11 +251,12 @@ $("submitBtn").onclick = async () => {
       throw new Error("القسم غير محدد.");
     }
 
-    if (Object.keys(answers).length !== 16 ||
-        Object.keys(files).length !== 4) {
-      throw new Error(
-        "تحقق من إجابة الأسئلة الستة عشر وإرفاق الصور الأربع."
-      );
+    if (Object.keys(answers).length !== 16) {
+      throw new Error("تحقق من إجابة الأسئلة الستة عشر.");
+    }
+
+    if (!answerFile) {
+      throw new Error("يرجى إرفاق صورة الحل قبل الإرسال.");
     }
 
     const score = quiz.mcq.reduce(
@@ -255,7 +265,10 @@ $("submitBtn").onclick = async () => {
       0
     );
 
-    // Save student information and selected class.
+    // Compress the photo before saving the submission.
+    const imageData = await compressImage(answerFile);
+
+    // Save student information and MCQ score.
     const submission = await addDoc(
       collection(db, "submissions"),
       {
@@ -263,30 +276,27 @@ $("submitBtn").onclick = async () => {
         studentClass,
         answers,
         score,
-        imagesCount: 4,
+        imagesCount: 1,
+        handwrittenMark: null,
         createdAt: serverTimestamp()
       }
     );
 
-    // Save the four compressed solution images.
-    for (let i = 0; i < 4; i++) {
-      const imageData = await compressImage(files[i]);
-
-      await addDoc(
-        collection(db, "submissions", submission.id, "images"),
-        {
-          questionNumber: i + 17,
-          imageData,
-          createdAt: serverTimestamp()
-        }
-      );
-    }
+    // Save the single compressed solution photo.
+    await addDoc(
+      collection(db, "submissions", submission.id, "images"),
+      {
+        questionNumber: 17,
+        imageData,
+        createdAt: serverTimestamp()
+      }
+    );
 
     $("quizCard").classList.add("hidden");
     $("doneCard").classList.remove("hidden");
 
     $("doneText").textContent =
-      `تم حفظ إجاباتك. علامتك الأولية: ${score} / 16.`;
+      `تم حفظ إجاباتك. علامتك الأولية: ${score} / 16. السؤال التطبيقي من 4 نقاط، وسيصححه الأستاذ.`;
 
   } catch (error) {
     notice("تعذر الإرسال: " + error.message);
