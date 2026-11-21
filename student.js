@@ -2,7 +2,8 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 
 import {
-  getFirestore, doc, getDoc, addDoc, collection, serverTimestamp, getDocs, query, where, orderBy
+  getFirestore, doc, getDoc, addDoc, collection, serverTimestamp,
+  getDocs, query, where, setDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 import {
@@ -136,6 +137,94 @@ async function compressImage(file) {
     reader.onerror = reject;
     reader.readAsDataURL(blob);
   });
+}
+
+// Display the ranking for the student's class.
+async function showClassRanking(submissionId, score) {
+  const container = document.createElement("div");
+  container.id = "classRanking";
+  container.style.marginTop = "20px";
+
+  $("doneText").insertAdjacentElement("afterend", container);
+
+  container.innerHTML = `
+    <h3 style="margin-bottom:12px;">ترتيب القسم — ${esc(studentClass)}</h3>
+    <p>جارٍ تحميل الترتيب...</p>
+  `;
+
+  try {
+    const rankingQuery = query(
+      collection(db, "publicRankings"),
+      where("studentClass", "==", studentClass)
+    );
+
+    const snapshot = await getDocs(rankingQuery);
+
+    const students = snapshot.docs.map(d => ({
+      id: d.id,
+      ...d.data()
+    }));
+
+    students.sort((a, b) =>
+      Number(b.score) - Number(a.score)
+    );
+
+    let rows = "";
+    let previousScore = null;
+    let currentRank = 0;
+
+    students.forEach((student, index) => {
+      const studentScore = Number(student.score);
+
+      if (studentScore !== previousScore) {
+        currentRank = index + 1;
+        previousScore = studentScore;
+      }
+
+      const isCurrentStudent = student.id === submissionId;
+
+      rows += `
+        <tr style="${isCurrentStudent ? "background:#e8f5e9;font-weight:bold;" : ""}">
+          <td style="padding:10px;text-align:center;">${currentRank}</td>
+          <td style="padding:10px;">${esc(student.name)}${isCurrentStudent ? " (أنت)" : ""}</td>
+          <td style="padding:10px;text-align:center;direction:ltr;">${studentScore}/16</td>
+        </tr>
+      `;
+    });
+
+    if (!students.length) {
+      container.innerHTML = `
+        <h3>ترتيب القسم — ${esc(studentClass)}</h3>
+        <p>لا توجد نتائج أخرى حالياً.</p>
+      `;
+      return;
+    }
+
+    container.innerHTML = `
+      <h3 style="margin-bottom:12px;">ترتيب القسم — ${esc(studentClass)}</h3>
+
+      <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;text-align:right;">
+          <thead>
+            <tr style="background:#f1f1f1;">
+              <th style="padding:10px;text-align:center;">الترتيب</th>
+              <th style="padding:10px;">اسم التلميذ</th>
+              <th style="padding:10px;text-align:center;">العلامة</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    `;
+
+  } catch (error) {
+    console.error("Ranking error:", error);
+
+    container.innerHTML = `
+      <h3>ترتيب القسم</h3>
+      <p>تعذر تحميل الترتيب حالياً. يمكنك المحاولة لاحقاً.</p>
+    `;
+  }
 }
 
 function render() {
@@ -292,11 +381,28 @@ $("submitBtn").onclick = async () => {
       }
     );
 
+    // Save only the information needed for the public ranking.
+    try {
+      await setDoc(
+        doc(db, "publicRankings", submission.id),
+        {
+          name,
+          studentClass,
+          score,
+          createdAt: serverTimestamp()
+        }
+      );
+    } catch (rankingError) {
+      console.error("Could not save ranking entry:", rankingError);
+    }
+
     $("quizCard").classList.add("hidden");
     $("doneCard").classList.remove("hidden");
 
     $("doneText").textContent =
       `تم حفظ إجاباتك. علامتك الأولية: ${score} / 16. السؤال التطبيقي من 4 نقاط، وسيصححه الأستاذ.`;
+
+    await showClassRanking(submission.id, score);
 
   } catch (error) {
     notice("تعذر الإرسال: " + error.message);
