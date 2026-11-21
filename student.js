@@ -1,3 +1,4 @@
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 
 import {
@@ -42,6 +43,53 @@ function esc(value) {
     "&": "&amp;", "<": "&lt;", ">": "&gt;",
     '"': "&quot;", "'": "&#39;"
   }[c]));
+}
+
+// Convert text containing \( LaTeX \) into readable mathematical formulas.
+function formatMathText(value) {
+  const text = String(value ?? "");
+  const regex = /\\\(([\s\S]*?)\\\)/g;
+
+  let result = "";
+  let lastIndex = 0;
+  let match;
+
+  while ((match = regex.exec(text)) !== null) {
+    result += esc(text.slice(lastIndex, match.index));
+
+    result += `
+      <math-field
+        read-only
+        virtual-keyboard-mode="off"
+        data-math-latex="${esc(match[1])}"
+        style="
+          display:inline-block;
+          border:none;
+          background:transparent;
+          padding:0;
+          margin:0 3px;
+          pointer-events:none;
+          vertical-align:middle;
+          min-width:0;
+        "
+      ></math-field>
+    `;
+
+    lastIndex = regex.lastIndex;
+  }
+
+  result += esc(text.slice(lastIndex));
+
+  return result;
+}
+
+// Activate all mathematical expressions after rendering the question.
+function activateMathFields() {
+  document.querySelectorAll("#questions math-field[data-math-latex]")
+    .forEach(field => {
+      field.value = field.dataset.mathLatex;
+      field.readOnly = true;
+    });
 }
 
 async function loadQuiz() {
@@ -238,7 +286,7 @@ function render() {
     html = `
       <div class="question">
         <p class="qtitle">
-          ${page + 1}. ${esc(q.q)}
+          ${page + 1}. ${formatMathText(q.q)}
           <span class="qtype">— اختيار من متعدد</span>
         </p>
 
@@ -246,7 +294,7 @@ function render() {
           <label class="option">
             <input type="radio" name="answer" value="${i}"
               ${answers[page] === i ? "checked" : ""}>
-            <span>${esc(option)}</span>
+            <span>${formatMathText(option)}</span>
           </label>
         `).join("")}
       </div>`;
@@ -257,7 +305,7 @@ function render() {
     html = `
       <div class="question">
         <p class="qtitle">
-          17. ${esc(q.q)}
+          17. ${formatMathText(q.q)}
           <span class="qtype">— السؤال التطبيقي (4 نقاط)</span>
         </p>
 
@@ -280,6 +328,9 @@ function render() {
   }
 
   $("questions").innerHTML = html;
+
+  // Render mathematical expressions in the question and choices.
+  activateMathFields();
 
   if (page === 16) {
     $("answerFile").onchange = event => {
@@ -382,7 +433,6 @@ $("submitBtn").onclick = async () => {
     );
 
     // Publish the student's verified ranking entry.
-    // A ranking failure must not undo a successfully saved submission.
     let rankingWarning = "";
 
     try {
