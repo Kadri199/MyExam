@@ -48,37 +48,42 @@ function esc(value) {
 // Convert text containing \( LaTeX \) into readable mathematical formulas.
 function formatMathText(value) {
   const text = String(value ?? "");
-  const regex = /\\\(([\s\S]*?)\\\)/g;
+  const open = "\\(";
+  const close = "\\)";
 
   let result = "";
-  let lastIndex = 0;
-  let match;
+  let position = 0;
 
-  while ((match = regex.exec(text)) !== null) {
-    result += esc(text.slice(lastIndex, match.index));
+  while (position < text.length) {
+    const start = text.indexOf(open, position);
+
+    if (start === -1) {
+      result += esc(text.slice(position));
+      break;
+    }
+
+    result += esc(text.slice(position, start));
+
+    const end = text.indexOf(close, start + open.length);
+
+    if (end === -1) {
+      result += esc(text.slice(start));
+      break;
+    }
+
+    const latex = text.slice(start + open.length, end);
 
     result += `
       <math-field
         read-only
         virtual-keyboard-mode="off"
-        data-math-latex="${esc(match[1])}"
-        style="
-          display:inline-block;
-          border:none;
-          background:transparent;
-          padding:0;
-          margin:0 3px;
-          pointer-events:none;
-          vertical-align:middle;
-          min-width:0;
-        "
+        data-math-latex="${esc(latex)}"
+        style="display:inline-block;border:none;background:transparent;padding:0;margin:0 3px;pointer-events:none;vertical-align:middle;min-width:0;"
       ></math-field>
     `;
 
-    lastIndex = regex.lastIndex;
+    position = end + close.length;
   }
-
-  result += esc(text.slice(lastIndex));
 
   return result;
 }
