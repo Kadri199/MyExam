@@ -1,4 +1,3 @@
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 
 import {
@@ -382,7 +381,10 @@ $("submitBtn").onclick = async () => {
       }
     );
 
-    // Save only the information needed for the public ranking.
+    // Publish the student's verified ranking entry.
+    // A ranking failure must not undo a successfully saved submission.
+    let rankingWarning = "";
+
     try {
       await setDoc(
         doc(db, "publicRankings", submission.id),
@@ -394,14 +396,15 @@ $("submitBtn").onclick = async () => {
         }
       );
     } catch (rankingError) {
-      console.error("Could not save ranking entry:", rankingError);
+      console.error("Ranking publication error:", rankingError);
+      rankingWarning = " تعذر تحديث ترتيب القسم حالياً.";
     }
 
     $("quizCard").classList.add("hidden");
     $("doneCard").classList.remove("hidden");
 
     $("doneText").textContent =
-      `تم حفظ إجاباتك. علامتك الأولية: ${score} / 16. السؤال التطبيقي من 4 نقاط، وسيصححه الأستاذ.`;
+      `تم حفظ إجاباتك. علامتك الأولية: ${score} / 16. السؤال التطبيقي من 4 نقاط، وسيصححه الأستاذ.${rankingWarning}`;
 
     await showClassRanking(submission.id, score);
 
