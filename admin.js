@@ -201,6 +201,7 @@ function createClassFilters() {
 }
 
 // Load submissions
+
 async function loadResults() {
   try {
     const snap = await getDocs(
@@ -215,6 +216,21 @@ async function loadResults() {
       ...d.data()
     }));
 
+    // Synchronize existing submissions with the public ranking.
+    await Promise.all(
+      submissions.map(student =>
+        setDoc(
+          doc(db, "publicRankings", student.id),
+          {
+            name: student.name,
+            studentClass: student.studentClass,
+            score: student.score
+          },
+          { merge: true }
+        )
+      )
+    );
+
     createClassFilters();
     renderClassRanking();
 
@@ -222,6 +238,7 @@ async function loadResults() {
     notice("تعذر تحميل النتائج: " + error.message);
   }
 }
+
 
 // Render selected class
 function renderClassRanking() {
