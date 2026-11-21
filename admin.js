@@ -72,10 +72,21 @@ async function loadQuiz() {
           options: ["الخيار الأول", "الخيار الثاني", "الخيار الثالث"],
           correct: 0
         })),
-        imageQuestions: Array.from({ length: 4 }, (_, i) => ({
-          q: `السؤال ${i + 17}`
-        }))
+        imageQuestions: [
+          { q: "السؤال 17 — الحل الكامل" }
+        ]
       };
+
+  // Keep only one handwritten question.
+  const firstImageQuestion = Array.isArray(quiz.imageQuestions)
+    ? quiz.imageQuestions[0]
+    : null;
+
+  quiz.imageQuestions = [
+    {
+      q: firstImageQuestion?.q || "السؤال 17 — الحل الكامل"
+    }
+  ];
 
   renderEditor();
 }
