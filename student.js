@@ -362,6 +362,7 @@ $("submitBtn").onclick = async () => {
       collection(db, "submissions"),
       {
         name,
+        studentUid: auth.currentUser.uid,
         studentClass,
         answers,
         score,
