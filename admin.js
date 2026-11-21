@@ -489,61 +489,132 @@ function printClass() {
 }
 
 // View student photos
+
 async function showDetails(id) {
-  const s = submissions.find(x => x.id === id);
-  if (!s) return;
+  // Remove an old viewer if one is already open.
+  document.getElementById("photoViewerModal")?.remove();
 
-  const w = window.open("", "_blank");
+  const student = submissions.find(s => s.id === id);
+  if (!student) return;
 
-  if (!w) {
-    alert("اسمح بفتح النوافذ المنبثقة لعرض التفاصيل.");
-    return;
+  const modal = document.createElement("div");
+  modal.id = "photoViewerModal";
+
+  modal.style.cssText = `
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    background: rgba(0,0,0,0.75);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 15px;
+    direction: rtl;
+  `;
+
+  const panel = document.createElement("div");
+  panel.style.cssText = `
+    background: white;
+    color: #222;
+    width: 100%;
+    max-width: 850px;
+    max-height: 90vh;
+    overflow-y: auto;
+    border-radius: 12px;
+    padding: 20px;
+  `;
+
+  const header = document.createElement("div");
+  header.style.cssText = `
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+  `;
+
+  const title = document.createElement("h2");
+  title.textContent = `حل التلميذ: ${student.name || ""}`;
+  title.style.margin = "0";
+
+  const closeBtn = document.createElement("button");
+  closeBtn.textContent = "✕ إغلاق";
+  closeBtn.style.cssText = `
+    background: #b42318;
+    color: white;
+    border: none;
+    border-radius: 7px;
+    padding: 10px 16px;
+    cursor: pointer;
+    font-size: 15px;
+  `;
+
+  function closeViewer() {
+    modal.remove();
+    document.removeEventListener("keydown", handleEscape);
   }
 
-  w.document.write(`
-    <html lang="ar" dir="rtl">
-    <meta charset="utf-8">
-    <title>إجابات ${esc(s.name)}</title>
-    <body style="font-family:Arial;padding:24px">
-      <h2>${esc(s.name)}</h2>
-      <h3>${esc(s.studentClass || "")}</h3>
-      <h3>علامة الاختيار المتعدد: ${s.score}/16</h3>
-      <p>صور الحلول:</p>
-      <div id="images">جارٍ تحميل الصور...</div>
-    </body>
-    </html>
-  `);
+  function handleEscape(event) {
+    if (event.key === "Escape") closeViewer();
+  }
+
+  closeBtn.addEventListener("click", closeViewer);
+  modal.addEventListener("click", event => {
+    if (event.target === modal) closeViewer();
+  });
+  document.addEventListener("keydown", handleEscape);
+
+  header.append(title, closeBtn);
+
+  const info = document.createElement("p");
+  info.textContent =
+    `القسم: ${student.studentClass || ""} — العلامة الأولية: ${student.score ?? 0}/16`;
+
+  const content = document.createElement("div");
+  content.textContent = "جارٍ تحميل صورة الحل...";
+
+  panel.append(header, info, content);
+  modal.appendChild(panel);
+  document.body.appendChild(modal);
 
   try {
-    const snap = await getDocs(
+    const imagesSnapshot = await getDocs(
       collection(db, "submissions", id, "images")
     );
 
-    const images = snap.docs
-      .map(d => d.data())
-      .sort((a, b) => a.questionNumber - b.questionNumber);
+    content.innerHTML = "";
 
-    const container = w.document.getElementById("images");
-
-    if (!images.length) {
-      container.textContent = "لم يتم العثور على صور.";
+    if (imagesSnapshot.empty) {
+      content.textContent = "لم يتم العثور على صورة الحل.";
       return;
     }
 
-    container.innerHTML = images.map(img => `
-      <div style="margin:25px 0">
-        <h3>السؤال ${img.questionNumber}</h3>
-        <img
-          src="${esc(img.imageData)}"
-          style="max-width:100%;max-height:600px">
-      </div>
-    `).join("");
+    imagesSnapshot.forEach(imageDoc => {
+      const image = imageDoc.data();
 
+      const imageTitle = document.createElement("h3");
+      imageTitle.textContent = "السؤال 17 — الحل الكامل";
+
+      const img = document.createElement("img");
+      img.src = image.imageData;
+      img.alt = "صورة حل التلميذ";
+      img.style.cssText = `
+        display: block;
+        max-width: 100%;
+        height: auto;
+        margin: 10px auto 25px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+      `;
+
+      content.append(imageTitle, img);
+    });
   } catch (error) {
-    w.document.getElementById("images").textContent =
-      "تعذر تحميل الصور: " + error.message;
+    console.error(error);
+    content.textContent = "حدث خطأ أثناء تحميل الصورة. حاول مجدداً.";
   }
 }
+
 
 function esc(s) {
   return String(s ?? "").replace(/[&<>"']/g, c => ({
