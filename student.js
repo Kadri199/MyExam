@@ -21,6 +21,8 @@ let quiz, name = "", studentClass = "", page = 0;
 let answers = {};
 let answerFile = null;
 
+const classes = ["Class 9", "Class 10", "Class 11", "Class 12"];
+
 const defaultQuiz = {
   title: "اختبار الرياضيات",
   mcq: Array.from({ length: 16 }, (_, i) => ({
@@ -111,6 +113,153 @@ async function loadQuiz() {
   }
 }
 
+/* =========================================
+   PUBLIC RANKING ON HOME PAGE
+========================================= */
+
+// Open the ranking page.
+$("showRankingBtn").onclick = () => {
+  $("startCard").classList.add("hidden");
+  $("rankingCard").classList.remove("hidden");
+  $("notice").classList.add("hidden");
+
+  $("rankingClasses").innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:18px 0;">
+      ${classes.map(className => `
+        <button
+          type="button"
+          class="secondary ranking-class-btn"
+          data-class="${className}"
+          style="width:100%;"
+        >
+          ${className}
+        </button>
+      `).join("")}
+    </div>
+  `;
+
+  $("rankingResults").innerHTML = `
+    <p class="muted small">اختر قسمك لعرض ترتيب التلاميذ.</p>
+  `;
+};
+
+// Select a class and load its ranking.
+$("rankingClasses").onclick = async event => {
+  const button = event.target.closest("[data-class]");
+
+  if (!button) return;
+
+  const selectedClass = button.dataset.class;
+
+  if (!classes.includes(selectedClass)) return;
+
+  document.querySelectorAll(".ranking-class-btn").forEach(btn => {
+    btn.disabled = true;
+  });
+
+  $("rankingResults").innerHTML = `
+    <p class="muted">جارٍ تحميل الترتيب...</p>
+  `;
+
+  try {
+    const rankingQuery = query(
+      collection(db, "publicRankings"),
+      where("studentClass", "==", selectedClass)
+    );
+
+    const snapshot = await getDocs(rankingQuery);
+
+    const students = snapshot.docs.map(d => ({
+      id: d.id,
+      ...d.data()
+    }));
+
+    students.sort((a, b) =>
+      Number(b.score || 0) - Number(a.score || 0)
+    );
+
+    if (!students.length) {
+      $("rankingResults").innerHTML = `
+        <h3>🏆 ترتيب ${esc(selectedClass)}</h3>
+        <p>لا توجد نتائج في هذا القسم حالياً.</p>
+      `;
+      return;
+    }
+
+    let rows = "";
+    let previousScore = null;
+    let currentRank = 0;
+
+    students.forEach((student, index) => {
+      const studentScore = Number(student.score || 0);
+
+      if (studentScore !== previousScore) {
+        currentRank = index + 1;
+        previousScore = studentScore;
+      }
+
+      rows += `
+        <tr>
+          <td style="padding:10px;text-align:center;">
+            ${currentRank}
+          </td>
+
+          <td style="padding:10px;">
+            ${esc(student.name)}
+          </td>
+
+          <td style="padding:10px;text-align:center;direction:ltr;">
+            ${studentScore}/16
+          </td>
+        </tr>
+      `;
+    });
+
+    $("rankingResults").innerHTML = `
+      <h3 style="margin-bottom:12px;">
+        🏆 ترتيب ${esc(selectedClass)}
+      </h3>
+
+      <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;text-align:right;">
+          <thead>
+            <tr style="background:#f1f1f1;">
+              <th style="padding:10px;text-align:center;">الترتيب</th>
+              <th style="padding:10px;">اسم التلميذ</th>
+              <th style="padding:10px;text-align:center;">العلامة</th>
+            </tr>
+          </thead>
+
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    `;
+
+  } catch (error) {
+    console.error("Public ranking error:", error);
+
+    $("rankingResults").innerHTML = `
+      <p>تعذر تحميل الترتيب حالياً. يرجى المحاولة لاحقاً.</p>
+    `;
+
+  } finally {
+    document.querySelectorAll(".ranking-class-btn").forEach(btn => {
+      btn.disabled = false;
+    });
+  }
+};
+
+// Return to the home page.
+$("closeRankingBtn").onclick = () => {
+  $("rankingCard").classList.add("hidden");
+  $("startCard").classList.remove("hidden");
+  $("notice").classList.add("hidden");
+};
+
+/* =========================================
+   START EXAM
+========================================= */
+
 $("startBtn").onclick = async () => {
   name = $("studentName").value.trim();
   studentClass = $("studentClass").value;
@@ -120,7 +269,7 @@ $("startBtn").onclick = async () => {
     return;
   }
 
-  if (!["Class 9", "Class 10", "Class 11", "Class 12"].includes(studentClass)) {
+  if (!classes.includes(studentClass)) {
     notice("يرجى اختيار القسم قبل بدء الاختبار.");
     return;
   }
@@ -202,7 +351,7 @@ async function compressImage(file) {
   });
 }
 
-// Display the ranking for the student's class.
+// Display the ranking for the student's class after submission.
 async function showClassRanking(submissionId, score) {
   const container = document.createElement("div");
   container.id = "classRanking";
@@ -433,7 +582,6 @@ $("submitBtn").onclick = async () => {
     const submissionId = uid;
 
     // Save the submission and photo atomically.
-    // If either write fails, neither is saved.
     const batch = writeBatch(db);
 
     const submissionRef = doc(db, "submissions", submissionId);
