@@ -30,6 +30,52 @@ function notice(t) {
   $("notice").classList.remove("hidden");
 }
 
+function esc(s) {
+  return String(s ?? "").replace(/[&<>"']/g, c => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  }[c]));
+}
+
+// Calculate the current total mark out of 20.
+// If the handwritten mark is not entered yet, use the MCQ score temporarily.
+function getRankingScore(student) {
+  return Number(student.score || 0) +
+    Number(student.handwrittenMark ?? 0);
+}
+
+// Sort by the current total mark, highest first.
+function sortClassResults(results) {
+  return [...results].sort((a, b) =>
+    getRankingScore(b) - getRankingScore(a)
+  );
+}
+
+// Assign equal ranks to pupils with equal marks.
+function getRankedResults(results) {
+  const sorted = sortClassResults(results);
+
+  let previousScore = null;
+  let currentRank = 0;
+
+  return sorted.map((student, index) => {
+    const currentScore = getRankingScore(student);
+
+    if (currentScore !== previousScore) {
+      currentRank = index + 1;
+      previousScore = currentScore;
+    }
+
+    return {
+      ...student,
+      rank: currentRank
+    };
+  });
+}
+
 $("loginBtn").onclick = async () => {
   try {
     await signInWithEmailAndPassword(
@@ -306,6 +352,7 @@ async function loadResults() {
       ...d.data()
     }));
 
+    // Keep the student-facing public ranking based on MCQ /16.
     await Promise.all(
       submissions.map(student =>
         setDoc(
@@ -329,9 +376,9 @@ async function loadResults() {
 }
 
 function renderClassRanking() {
-  const classResults = submissions
-    .filter(s => s.studentClass === selectedClass)
-    .sort((a, b) => (b.score ?? 0) - (a.score ?? 0));
+  const classResults = getRankedResults(
+    submissions.filter(s => s.studentClass === selectedClass)
+  );
 
   document.querySelectorAll("[data-class]").forEach(button => {
     const active = button.dataset.class === selectedClass;
@@ -344,26 +391,26 @@ function renderClassRanking() {
 
   $("avgScore").textContent = classResults.length
     ? (
-        classResults.reduce((sum, s) => sum + (s.score || 0), 0) /
+        classResults.reduce((sum, s) => sum + getRankingScore(s), 0) /
         classResults.length
       ).toFixed(2)
     : "—";
 
   $("topScore").textContent = classResults.length
-    ? `${classResults[0].score}`
+    ? `${getRankingScore(classResults[0]).toFixed(2)} / 20`
     : "—";
 
   $("resultsBody").innerHTML = classResults.length
-    ? classResults.map((s, i) => {
+    ? classResults.map(s => {
         const manual = s.handwrittenMark ?? "";
 
         const final = manual === ""
           ? "—"
-          : (Number(s.score || 0) + Number(manual)).toFixed(2);
+          : getRankingScore(s).toFixed(2);
 
         return `
           <tr>
-            <td class="rank">${i + 1}</td>
+            <td class="rank">${s.rank}</td>
             <td>${esc(s.name)}</td>
             <td><b>${s.score ?? "—"}</b></td>
 
@@ -453,7 +500,11 @@ function renderClassRanking() {
           });
 
           delete student.handwrittenMark;
+
           notice("تم حذف علامة الحلول الكتابية.");
+
+          // Recalculate ranking after deleting the mark.
+          renderClassRanking();
 
         } catch (error) {
           notice("تعذر حذف العلامة: " + error.message);
@@ -482,7 +533,11 @@ function renderClassRanking() {
         });
 
         student.handwrittenMark = n;
-        notice("تم حفظ علامة الحلول الكتابية بنجاح.");
+
+        notice("تم حفظ علامة الحلول الكتابية وتحديث الترتيب.");
+
+        // Recalculate ranking immediately after saving the mark.
+        renderClassRanking();
 
       } catch (error) {
         notice("تعذر حفظ العلامة: " + error.message);
@@ -498,20 +553,21 @@ function renderClassRanking() {
 }
 
 function printClass() {
-  const classResults = submissions
-    .filter(s => s.studentClass === selectedClass)
-    .sort((a, b) => (b.score ?? 0) - (a.score ?? 0));
+  // Printed results use the same final-mark ranking as the dashboard.
+  const classResults = getRankedResults(
+    submissions.filter(s => s.studentClass === selectedClass)
+  );
 
-  const rows = classResults.map((s, i) => {
+  const rows = classResults.map(s => {
     const manual = s.handwrittenMark ?? "";
 
     const final = manual === ""
       ? "—"
-      : (Number(s.score || 0) + Number(manual)).toFixed(2);
+      : getRankingScore(s).toFixed(2);
 
     return `
       <tr>
-        <td>${i + 1}</td>
+        <td>${s.rank}</td>
         <td>${esc(s.name)}</td>
         <td>${s.score ?? "—"}</td>
         <td>${manual === "" ? "—" : manual}</td>
@@ -706,14 +762,4 @@ async function showDetails(id) {
     console.error(error);
     content.textContent = "حدث خطأ أثناء تحميل الصورة. حاول مجدداً.";
   }
-}
-
-function esc(s) {
-  return String(s ?? "").replace(/[&<>"']/g, c => ({
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    '"': "&quot;",
-    "'": "&#39;"
-  }[c]));
 }
