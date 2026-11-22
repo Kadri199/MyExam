@@ -2,8 +2,8 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 
 import {
-  getFirestore, doc, getDoc, addDoc, collection, serverTimestamp,
-  getDocs, query, where, setDoc
+  getFirestore, doc, getDoc, collection, serverTimestamp,
+  getDocs, query, where, setDoc, writeBatch
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 import {
@@ -88,7 +88,7 @@ function formatMathText(value) {
   return result;
 }
 
-// Activate all mathematical expressions after rendering the question.
+// Activate mathematical expressions after rendering.
 function activateMathFields() {
   document.querySelectorAll("#questions math-field[data-math-latex]")
     .forEach(field => {
@@ -129,6 +129,17 @@ $("startBtn").onclick = async () => {
 
   try {
     await signInAnonymously(auth);
+
+    // Check whether this browser account has already submitted.
+    const uid = auth.currentUser.uid;
+    const previousRanking = await getDoc(
+      doc(db, "publicRankings", uid)
+    );
+
+    if (previousRanking.exists()) {
+      throw new Error("لقد أرسلت الاختبار من هذا الجهاز من قبل. لا يمكنك الإرسال مرة ثانية.");
+    }
+
     await loadQuiz();
 
     $("nameLabel").textContent = name;
@@ -139,7 +150,7 @@ $("startBtn").onclick = async () => {
     render();
 
   } catch (error) {
-    notice("تعذر الاتصال: " + error.message);
+    notice(error.message || "تعذر الاتصال بالخادم.");
     $("startBtn").disabled = false;
   }
 };
@@ -334,7 +345,6 @@ function render() {
 
   $("questions").innerHTML = html;
 
-  // Render mathematical expressions in the question and choices.
   activateMathFields();
 
   if (page === 16) {
@@ -395,6 +405,10 @@ $("submitBtn").onclick = async () => {
       throw new Error("القسم غير محدد.");
     }
 
+    if (!auth.currentUser) {
+      throw new Error("انتهت جلسة الاتصال. أعد تحميل الصفحة.");
+    }
+
     if (Object.keys(answers).length !== 16) {
       throw new Error("تحقق من إجابة الأسئلة الستة عشر.");
     }
@@ -403,46 +417,60 @@ $("submitBtn").onclick = async () => {
       throw new Error("يرجى إرفاق صورة الحل قبل الإرسال.");
     }
 
+    const uid = auth.currentUser.uid;
+
+    // Calculate the MCQ score.
     const score = quiz.mcq.reduce(
       (total, q, i) =>
         total + (answers[i] === Number(q.correct) ? 1 : 0),
       0
     );
 
-    // Compress the photo before saving the submission.
+    // Compress the photo before saving anything.
     const imageData = await compressImage(answerFile);
 
-    // Save student information and MCQ score.
-    const submission = await addDoc(
-      collection(db, "submissions"),
-      {
-        name,
-        studentUid: auth.currentUser.uid,
-        studentClass,
-        answers,
-        score,
-        imagesCount: 1,
-        handwrittenMark: null,
-        createdAt: serverTimestamp()
-      }
+    // The UID is the permanent submission document ID.
+    const submissionId = uid;
+
+    // Save the submission and photo atomically.
+    // If either write fails, neither is saved.
+    const batch = writeBatch(db);
+
+    const submissionRef = doc(db, "submissions", submissionId);
+
+    const imageRef = doc(
+      db,
+      "submissions",
+      submissionId,
+      "images",
+      "solution"
     );
 
-    // Save the single compressed solution photo.
-    await addDoc(
-      collection(db, "submissions", submission.id, "images"),
-      {
-        questionNumber: 17,
-        imageData,
-        createdAt: serverTimestamp()
-      }
-    );
+    batch.set(submissionRef, {
+      name,
+      studentUid: uid,
+      studentClass,
+      answers,
+      score,
+      imagesCount: 1,
+      handwrittenMark: null,
+      createdAt: serverTimestamp()
+    });
 
-    // Publish the student's verified ranking entry.
+    batch.set(imageRef, {
+      questionNumber: 17,
+      imageData,
+      createdAt: serverTimestamp()
+    });
+
+    await batch.commit();
+
+    // Publish the student's ranking entry.
     let rankingWarning = "";
 
     try {
       await setDoc(
-        doc(db, "publicRankings", submission.id),
+        doc(db, "publicRankings", submissionId),
         {
           name,
           studentClass,
@@ -461,10 +489,18 @@ $("submitBtn").onclick = async () => {
     $("doneText").textContent =
       `تم حفظ إجاباتك. علامتك الأولية: ${score} / 16. السؤال التطبيقي من 4 نقاط، وسيصححه الأستاذ.${rankingWarning}`;
 
-    await showClassRanking(submission.id, score);
+    await showClassRanking(submissionId, score);
 
   } catch (error) {
-    notice("تعذر الإرسال: " + error.message);
+    console.error("Submission error:", error);
+
+    if (error.code === "permission-denied") {
+      notice(
+        "تعذر قبول الإرسال. ربما أرسلت الاختبار من هذا الجهاز من قبل، أو توجد مشكلة في صلاحيات قاعدة البيانات."
+      );
+    } else {
+      notice("تعذر الإرسال: " + error.message);
+    }
 
     $("submitBtn").disabled = false;
     $("submitBtn").textContent = "إرسال الإجابات";
