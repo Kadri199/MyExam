@@ -6,11 +6,10 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="google-site-verification" content="AqosvgtALJ_hD1hvpxw1yYdnH5MB8AfSUKvrTGZPd-o" />
 <title>Kadri_Class — اختبار الرياضيات</title>
-<meta name="description" content="Kadri_Class منصة تعليمية جزائرية لاجتياز اختبارات الرياضيات الإلكترونية لتلاميذ الطور المتوسط، مع التصحيح الآلي وعرض النتائج والترتيب."> 
+<meta name="description" content="Kadri_Class منصة تعليمية جزائرية لاجتياز اختبارات الرياضيات الإلكترونية لتلاميذ الطور المتوسط، مع التصحيح الآلي وعرض النتائج والترتيب.">
 <link rel="stylesheet" href="style.css">
 <link rel="manifest" href="./manifest.json">
 <meta name="theme-color" content="#173b67">
-
 <script defer src="https://cdn.jsdelivr.net/npm/mathlive"></script>
 </head>
 
@@ -30,10 +29,14 @@
   <p>
   Kadri_Class منصة اختبارات الرياضيات الإلكترونية لتلاميذ التعليم المتوسط في الجزائر،
   توفر اختبارات تفاعلية وتصحيحاً آلياً وعرض النتائج والترتيب حسب الأقسام.
-</p>
+  </p>
 </section>
 
 <section id="startCard" class="panel">
+
+  <button id="showRankingBtn" class="secondary">
+    🏆 عرض ترتيب الأقسام
+  </button>
 
   <h2>بيانات التلميذ</h2>
 
@@ -57,6 +60,22 @@
   <p class="muted small">
     يتكون الاختبار من 17 سؤالاً: 16 اختياراً من متعدد وسؤال واحد يتطلب إرفاق صورة الحل.
   </p>
+
+</section>
+
+<section id="rankingCard" class="panel hidden">
+
+  <h2>🏆 ترتيب التلاميذ</h2>
+
+  <p class="muted small">اختر قسمك للاطلاع على الترتيب حسب العلامة من 16.</p>
+
+  <div id="rankingClasses"></div>
+
+  <div id="rankingResults"></div>
+
+  <button id="closeRankingBtn" class="secondary">
+    العودة
+  </button>
 
 </section>
 
