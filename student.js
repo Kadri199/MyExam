@@ -209,7 +209,7 @@ $("rankingClasses").onclick = async event => {
           </td>
 
           <td style="padding:10px;text-align:center;direction:ltr;">
-            ${studentScore}
+            ${studentScore} /16
           </td>
         </tr>
       `;
