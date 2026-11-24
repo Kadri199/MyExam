@@ -454,10 +454,11 @@ $("closeStudentProfileBtn").onclick = () => {
    START EXAM
 ========================================= */
 
-function setAuthMode(mode) {
+function setAuthMode(mode, revealForm = true) {
   authMode = mode;
   $("registerModeBtn").className = mode === "register" ? "primary" : "secondary";
   $("loginModeBtn").className = mode === "login" ? "primary" : "secondary";
+  $("studentAuthForm").classList.toggle("hidden", !revealForm);
   $("authSubmitBtn").textContent = mode === "register"
     ? "إنشاء الملف وبدء الاختبار ←"
     : "الدخول وبدء الاختبار ←";
@@ -465,7 +466,7 @@ function setAuthMode(mode) {
   $("notice").classList.add("hidden");
 }
 
-$("registerModeBtn").onclick = () => setAuthMode("register");
+$("registerModeBtn").onclick = () => setAuthMode("login", false);
 $("loginModeBtn").onclick = () => setAuthMode("login");
 
 async function beginStudentExam() {
