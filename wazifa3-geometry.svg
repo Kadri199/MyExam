@@ -10,7 +10,7 @@
 <text x="790" y="38" text-anchor="middle" class="cap">المربع</text>
 <path class="shape" d="M650 85 H930 V365 H650 Z"/>
 <path class="shape" d="M650 85 h20 v20 h-20 M910 85 v20 h20 M650 345 h20 v20 h-20 M910 365 v-20 h20"/>
-<path class="tick" d="M780 78 v14 M790 78 v14 M780 358 v14 M790 358 v14 M643 215 h14 M643 225 h14 M923 215 h14 M923 225 h14"/>
+<path class="tick" d="M785 78 v14 M785 358 v14 M643 220 h14 M923 220 h14"/>
 <text class="lbl" x="625" y="75">H</text><text class="lbl" x="940" y="75">G</text><text class="lbl" x="625" y="395">E</text><text class="lbl" x="940" y="395">F</text>
 <text x="540" y="440" text-anchor="middle" class="cap">الدائرة وعناصرها</text>
 <circle class="shape" cx="540" cy="545" r="92"/>
