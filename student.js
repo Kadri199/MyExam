@@ -182,7 +182,7 @@ function renderPublicRanking(snapshot, selectedClass) {
         </td>
 
         <td style="padding:10px;text-align:center;direction:ltr;">
-          <strong>${finalMark}</strong>
+          <strong>${finalMark}</strong> /20
         </td>
       </tr>
     `;
