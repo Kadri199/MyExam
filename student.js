@@ -61,7 +61,7 @@ async function makeStudentAuthEmail(fullName, classId, pin) {
   if (!globalThis.crypto?.subtle) {
     throw new Error("المتصفح لا يدعم إنشاء الحساب الآمن. حدّث المتصفح وحاول مجدداً.");
   }
-  const normalizedName = String(fullName).normalize("NFC").trim().replace(/\\s+/g, " ").toLowerCase();
+  const normalizedName = String(fullName).normalize("NFC").trim().replace(/\s+/g, " ").toLowerCase();
   const source = classId + "|" + normalizedName + "|" + pin;
   const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(source));
   const hash = [...new Uint8Array(digest)].map(byte => byte.toString(16).padStart(2, "0")).join("");
@@ -506,7 +506,7 @@ async function beginStudentExam() {
 }
 
 $("authSubmitBtn").onclick = async () => {
-  name = $("studentName").value.trim().replace(/\\s+/g, " ");
+  name = $("studentName").value.trim().replace(/\s+/g, " ");
   studentClass = $("studentClass").value;
   const pin = $("studentPin").value.trim();
 
@@ -518,7 +518,7 @@ $("authSubmitBtn").onclick = async () => {
     notice("يرجى اختيار القسم.");
     return;
   }
-  if (!/^\\d{6}$/.test(pin)) {
+  if (!/^\d{6}$/.test(pin)) {
     notice("يجب إدخال رمز سري مكوّن من 6 أرقام بالضبط.");
     return;
   }
