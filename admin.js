@@ -23,7 +23,6 @@ let quiz = null;
 let submissions = [];
 let studentProfiles = [];
 let selectedClass = "Class 9";
-let tests=[];
 let selectedTestId="wazifa2";
 
 const classes = ["Class 9", "Class 10", "Class 11", "Class 12"];
@@ -111,22 +110,30 @@ onAuthStateChanged(auth, async user => {
   }
 });
 
-async function loadAll(){ await loadTests(); await loadResults(); await loadStudentPins(); }
-
-async function loadTests(){
- const legacy=await getDoc(doc(db,"settings","quiz"));
- const base=legacy.exists()?legacy.data():{title:"وظيفة 2",mcq:Array.from({length:16},(_,i)=>({q:`السؤال ${i+1}`,options:["الخيار الأول","الخيار الثاني","الخيار الثالث"],correct:0})),imageQuestions:[{q:"السؤال 17 — الحل الكامل"}]};
- const snap=await getDocs(collection(db,"examTests"));
- tests=snap.docs.map(d=>({id:d.id,...d.data()}));
- if(!tests.some(t=>t.id==="wazifa2")){
-  base.title="وظيفة 2";base.startAt=base.startAt||Date.now();base.endAt=base.endAt||new Date("2026-11-24T23:59:00+01:00").getTime();
-  await setDoc(doc(db,"examTests","wazifa2"),base);tests.push({id:"wazifa2",...base});
- }
- const metaRef=doc(db,"settings","exams"),metaSnap=await getDoc(metaRef),meta=metaSnap.exists()?metaSnap.data():{};
- if(!meta.activeTestId||!tests.some(t=>t.id===meta.activeTestId))meta.activeTestId="wazifa2";
- await setDoc(metaRef,{activeTestId:meta.activeTestId,tests:tests.map(t=>({id:t.id,title:t.title}))},{merge:true});
- selectedTestId=meta.activeTestId;
+async function loadAll() {
+  // Load independent dashboard sections at the same time.
+  // A slow exam-settings request must not delay submissions or student accounts.
+  await Promise.allSettled([
+    loadActiveTest(),
+    loadResults(),
+    loadStudentPins()
+  ]);
 }
+
+async function loadActiveTest() {
+  try {
+    const metaSnap = await getDoc(doc(db, "settings", "exams"));
+    const meta = metaSnap.exists() ? metaSnap.data() : {};
+    selectedTestId = meta.activeTestId || "wazifa2";
+
+    // Results may have finished loading before the active test setting.
+    if (submissions.length) renderClassRanking();
+  } catch (error) {
+    console.error("Active exam setting error:", error);
+    // Keep the safe default test ID if settings cannot be read.
+  }
+}
+
 $("refreshBtn").onclick = loadResults;
 
 function createClassFilters() {
@@ -165,6 +172,13 @@ function createClassFilters() {
 }
 
 async function loadResults() {
+  const refreshButton = $("refreshBtn");
+  if (refreshButton) {
+    refreshButton.disabled = true;
+    refreshButton.textContent = "جارٍ التحديث...";
+  }
+  $("resultsBody").innerHTML = '<tr><td colspan="7">جارٍ تحميل النتائج...</td></tr>';
+
   try {
     const snap = await getDocs(
       query(
@@ -184,6 +198,12 @@ async function loadResults() {
 
   } catch (error) {
     notice("تعذر تحميل النتائج: " + error.message);
+    $("resultsBody").innerHTML = '<tr><td colspan="7">تعذر تحميل النتائج. حاول التحديث.</td></tr>';
+  } finally {
+    if (refreshButton) {
+      refreshButton.disabled = false;
+      refreshButton.textContent = "تحديث النتائج";
+    }
   }
 }
 
@@ -230,7 +250,9 @@ function renderClassRanking() {
     button.style.color = active ? "#ffffff" : "";
   });
 
-  $("printClassBtn").textContent = `🖨 طباعة نتائج ${selectedClass}`;
+  if ($("printClassBtn")) {
+    $("printClassBtn").textContent = `🖨 طباعة نتائج ${selectedClass}`;
+  }
   $("countAll").textContent = classResults.length;
 
   $("avgScore").textContent = classResults.length
