@@ -117,6 +117,25 @@
     <span id="saveStatus" class="muted small"></span>
   </section>
 
+
+  <section class="panel" id="examBankAdmin">
+    <h2>📚 بنك الفروض والاختبارات</h2>
+    <p class="muted small">ارفع صور الفروض والاختبارات حسب الفصل. يمكن للتلاميذ مشاهدتها وتنزيلها.</p>
+    <label for="bankTrimester">الفصل الدراسي</label>
+    <select id="bankTrimester">
+      <option value="term1">الفصل الأول</option>
+      <option value="term2">الفصل الثاني</option>
+      <option value="term3">الفصل الثالث</option>
+    </select>
+    <label for="bankTitle">عنوان الفرض أو الاختبار</label>
+    <input id="bankTitle" type="text" maxlength="120" placeholder="مثلاً: اختبار الفصل الأول">
+    <label for="bankPhotos">اختر الصور (يمكن اختيار عدة صور)</label>
+    <input id="bankPhotos" type="file" accept="image/*" multiple>
+    <button id="uploadBankBtn" class="primary" type="button">رفع الصور</button>
+    <p id="bankUploadStatus" class="muted small" aria-live="polite"></p>
+    <div id="bankAdminList"></div>
+  </section>
+
 </div>
 
 <div id="notice" class="notice hidden"></div>
@@ -126,6 +145,7 @@
 <footer>Kadri_Class — منصة الاختبارات المدرسية</footer>
 
 <script type="module" src="admin.js"></script>
+<script type="module" src="exam-bank.js"></script>
 
 <script>
 if ("serviceWorker" in navigator) {
