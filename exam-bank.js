@@ -17,7 +17,7 @@ const escapeHtml = value => String(value ?? "").replace(/[&<>"']/g, c => ({
 
 const terms = { term1: "الفصل الأول", term2: "الفصل الثاني", term3: "الفصل الثالث" };
 let allPhotos = [];
-let selectedTerm = "term1";
+let selectedTerm = null;
 
 function formatDate(value) {
   if (!value || typeof value.toDate !== "function") return "";
@@ -36,6 +36,11 @@ function renderPublicGallery() {
     button.style.background = active ? "#173b67" : "";
     button.style.color = active ? "#fff" : "";
   });
+
+  if (!selectedTerm) {
+    gallery.innerHTML = '<p class="muted small">اختر فصلاً لعرض الفروض والاختبارات.</p>';
+    return;
+  }
 
   if (!photos.length) {
     gallery.innerHTML = '<p class="muted small">لا توجد صور مضافة في هذا الفصل حالياً.</p>';
