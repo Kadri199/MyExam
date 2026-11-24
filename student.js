@@ -140,6 +140,13 @@ function getFinalScore(student) {
   return Number(student.score || 0) + Number(manual);
 }
 
+function getRankMedal(rank) {
+  if (rank === 1) return '<span class="rank-medal gold" title="المركز الأول — الميدالية الذهبية">🥇 ذهبية</span>';
+  if (rank === 2) return '<span class="rank-medal silver" title="المركز الثاني — الميدالية الفضية">🥈 فضية</span>';
+  if (rank === 3) return '<span class="rank-medal bronze" title="المركز الثالث — الميدالية البرونزية">🥉 برونزية</span>';
+  return "";
+}
+
 function sortByFinalScore(a, b) {
   const finalA = getFinalScore(a);
   const finalB = getFinalScore(b);
@@ -222,7 +229,7 @@ students.forEach((student, index) => {
       <table style="width:100%;border-collapse:collapse;text-align:right;">
         <thead>
           <tr style="background:#f1f1f1;">
-            <th style="padding:10px;text-align:center;">الترتيب</th>
+            <th style="padding:10px;text-align:center;">الترتيب والجوائز</th>
             <th style="padding:10px;">اسم التلميذ</th>
             <th style="padding:10px;text-align:center;">العلامة /16</th>
             <th style="padding:10px;text-align:center;">العلامة النهائية /20</th>
