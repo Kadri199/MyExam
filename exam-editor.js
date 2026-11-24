@@ -34,10 +34,10 @@ function mathEditor(key) {
 }
 function renderTestManager() {
   $("testManager").innerHTML = `<div style="display:flex;flex-wrap:wrap;gap:8px;margin:12px 0">
-    ${tests.map(t=>`<button type="button" data-test="${esc(t.id)}" class="${t.id===selectedTestId?"primary":"secondary"}">${esc(t.title||"اختبار")} ${t.id===activeTestId?"— منشور":""}</button>`).join("")}
+    ${tests.map(t=>`<button type="button" data-test="${esc(t.id)}" class="${t.id===selectedTestId?"primary":"secondary"}">${esc(t.title||"اختبار")} ${t.id===activeTestId?"— منشورة":""}</button>`).join("")}
     <button id="addTestBtn" class="secondary" type="button">＋ إضافة اختبار</button>
   </div>
-  <button id="publishTestBtn" class="primary" type="button">نشر الاختبار المحدد للتلاميذ</button>`;
+  <button id="publishTestBtn" class="primary" type="button">نشر الوظيفة المحددة للتلاميذ</button>`;
   document.querySelectorAll("[data-test]").forEach(button => button.onclick = async () => {
     if (dirty && !await saveNow()) return;
     selectedTestId = button.dataset.test;
@@ -246,7 +246,7 @@ async function publishSelectedTest() {
   await setDoc(doc(db,"settings","exams"),{activeTestId:selectedTestId,tests:tests.map(t=>({id:t.id,title:t.title}))},{merge:true});
   activeTestId = selectedTestId;
   renderTestManager();
-  status("تم نشر الاختبار المحدد للتلاميذ.");
+  status("تم نشر الوظيفة المحددة للتلاميذ.");
 }
 $("editor").addEventListener("input",scheduleAutosave);
 $("editor").addEventListener("change",scheduleAutosave);
