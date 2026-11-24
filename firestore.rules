@@ -4,12 +4,28 @@ service cloud.firestore {
   match /databases/{database}/documents {
     function isTeacher() {
       return request.auth != null
-        && request.auth.token.firebase.sign_in_provider == 'password';
+        && request.auth.token.firebase.sign_in_provider == 'password'
+        && request.auth.token.email == 'afterdark706@gmail.com';
     }
 
     function isStudent() {
       return request.auth != null
-        && request.auth.token.firebase.sign_in_provider == 'anonymous';
+        && request.auth.token.firebase.sign_in_provider == 'password'
+        && request.auth.token.email != 'afterdark706@gmail.com';
+    }
+
+    match /studentProfiles/{studentUid} {
+      allow create: if isStudent()
+        && request.auth.uid == studentUid
+        && request.resource.data.name is string
+        && request.resource.data.name.size() >= 3
+        && request.resource.data.name.size() <= 100
+        && request.resource.data.studentClass in [
+          'Class 9', 'Class 10', 'Class 11', 'Class 12'
+        ];
+      allow read: if request.auth != null
+        && (request.auth.uid == studentUid || isTeacher());
+      allow update, delete: if false;
     }
 
     match /settings/quiz {
@@ -19,7 +35,7 @@ service cloud.firestore {
 
     match /submissions/{submissionId} {
 
-      // One submission per anonymous Firebase account.
+      // One submission per registered pupil account.
       allow create: if isStudent()
         && submissionId == request.auth.uid
         && request.resource.data.studentUid == request.auth.uid
