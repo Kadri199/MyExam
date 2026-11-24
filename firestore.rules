@@ -17,5 +17,22 @@ service cloud.firestore {
       allow read, update, delete: if request.auth != null
         && request.auth.token.firebase.sign_in_provider == 'password';
     }
+
+    match /examBank/{photoId} {
+      allow read: if true;
+      allow create: if request.auth != null
+        && request.auth.token.firebase.sign_in_provider == 'password'
+        && request.resource.data.keys().hasAll(['title','trimester','imageData','fileName','createdAt'])
+        && request.resource.data.trimester in ['term1','term2','term3']
+        && request.resource.data.title is string
+        && request.resource.data.title.size() <= 120
+        && request.resource.data.imageData is string
+        && request.resource.data.imageData.size() < 800000
+        && request.resource.data.fileName is string;
+      allow update: if false;
+      allow delete: if request.auth != null
+        && request.auth.token.firebase.sign_in_provider == 'password';
+    }
+
   }
 }
