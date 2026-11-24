@@ -202,7 +202,7 @@ students.forEach((student, index) => {
     rows += `
       <tr>
         <td style="padding:10px;text-align:center;">
-          ${currentRank}
+          ${currentRank} ${getRankMedal(currentRank)}
         </td>
 
         <td style="padding:10px;">
@@ -319,6 +319,105 @@ $("closeRankingBtn").onclick = () => {
   $("rankingCard").classList.add("hidden");
   $("startCard").classList.remove("hidden");
   $("notice").classList.add("hidden");
+};
+
+
+/* =========================================
+   STUDENT PROFILE
+========================================= */
+async function openStudentProfile() {
+  const user = auth.currentUser;
+  if (!user || user.email?.toLowerCase() === "afterdark706@gmail.com") {
+    notice("سجّل الدخول بحساب التلميذ أولاً لعرض ملفك الشخصي.");
+    return;
+  }
+
+  $("startCard").classList.add("hidden");
+  $("rankingCard").classList.add("hidden");
+  $("studentProfileCard").classList.remove("hidden");
+  $("studentProfileContent").innerHTML = '<p class="muted">جارٍ تحميل ملفك الشخصي...</p>';
+
+  try {
+    const profileSnap = await getDoc(doc(db, "studentProfiles", user.uid));
+    if (!profileSnap.exists()) throw new Error("لم يتم العثور على ملفك الشخصي.");
+    const profile = profileSnap.data();
+    name = profile.name || name;
+    studentClass = profile.studentClass || studentClass;
+
+    const ownResult = await getDoc(doc(db, "publicRankings", user.uid));
+    let completed = 0;
+    let bestMark = "—";
+    let resultHtml = '<p class="muted">لم تُرسل أي اختبار بعد.</p>';
+
+    if (ownResult.exists()) {
+      const data = ownResult.data();
+      completed = 1;
+      const final = getFinalScore(data);
+      bestMark = final === null ? "بانتظار تصحيح السؤال التطبيقي" : final.toFixed(2) + " / 20";
+
+      const classSnap = await getDocs(query(
+        collection(db, "publicRankings"),
+        where("studentClass", "==", studentClass)
+      ));
+      const classmates = classSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+      classmates.sort(sortByFinalScore);
+      let previous = null;
+      let rankNumber = 0;
+      classmates.forEach((item, index) => {
+        const score = getFinalScore(item);
+        if (score !== previous) {
+          rankNumber = index + 1;
+          previous = score;
+        }
+      });
+      const myRank = classmates.findIndex(item => item.id === user.uid);
+      let rank = "—";
+      if (myRank >= 0) {
+        let prev = null;
+        classmates.forEach((item, index) => {
+          const score = getFinalScore(item);
+          if (score !== prev) {
+            rankNumber = index + 1;
+            prev = score;
+          }
+          if (item.id === user.uid) rank = rankNumber;
+        });
+      }
+
+      const mcq = Number(data.score || 0);
+      const manual = data.handwrittenMark;
+      resultHtml = `
+        <div class="profile-result">
+          <h3>نتيجة الاختبار المتاح</h3>
+          <p>الاختيار من متعدد: <strong>${mcq} / 16</strong></p>
+          <p>السؤال التطبيقي: <strong>${manual == null ? "بانتظار تصحيح الأستاذ" : Number(manual) + " / 4"}</strong></p>
+          <p>العلامة النهائية: <strong>${bestMark}</strong></p>
+          <p>ترتيبك في القسم: <strong>${rank} ${typeof rank === "number" ? getRankMedal(rank) : ""}</strong></p>
+          <p>الجائزة: <strong>${typeof rank === "number" ? (getRankMedal(rank) || "لا توجد ميدالية حالياً") : "بانتظار ترتيبك"}</strong></p>
+        </div>`;
+    }
+
+    $("studentProfileContent").innerHTML = `
+      <div class="profile-grid">
+        <div class="profile-item"><span>الاسم واللقب</span><strong>${esc(name)}</strong></div>
+        <div class="profile-item"><span>القسم</span><strong>${esc(studentClass.replace("Class ", "1م"))}</strong></div>
+        <div class="profile-item"><span>البريد الإلكتروني</span><strong dir="ltr">${esc(user.email || "—")}</strong></div>
+        <div class="profile-item"><span>الاختبارات المكتملة</span><strong>${completed}</strong></div>
+        <div class="profile-item"><span>أفضل علامة مسجلة</span><strong>${bestMark}</strong></div>
+      </div>
+      <h3>📚 سجل الاختبارات</h3>
+      ${resultHtml}
+    `;
+  } catch (error) {
+    console.error("Student profile error:", error);
+    $("studentProfileContent").innerHTML = '<p>تعذر تحميل ملفك الشخصي. حاول مجدداً.</p>';
+  }
+}
+
+$("studentProfileBtn").onclick = openStudentProfile;
+$("closeStudentProfileBtn").onclick = () => {
+  $("studentProfileCard").classList.add("hidden");
+  $("startCard").classList.remove("hidden");
 };
 
 /* =========================================
@@ -439,6 +538,7 @@ $("forgotPasswordBtn").onclick = async () => {
 };
 
 onAuthStateChanged(auth, async user => {
+  $("studentProfileBtn").classList.toggle("hidden", !user || user.email?.toLowerCase() === "afterdark706@gmail.com");
   if (!user || user.email?.toLowerCase() === "afterdark706@gmail.com") return;
   try {
     const profile = await getDoc(doc(db, "studentProfiles", user.uid));
