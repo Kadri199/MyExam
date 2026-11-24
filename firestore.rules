@@ -33,7 +33,6 @@ service cloud.firestore {
     match /examTests/{testId} { allow read: if true; allow create, update, delete: if isTeacher(); }
 
     match /submissions/{submissionId} {
-
       allow create: if isStudent()
         && request.resource.data.studentUid == request.auth.uid
         && request.resource.data.testId is string
@@ -43,23 +42,16 @@ service cloud.firestore {
         && request.resource.data.name.size() >= 3
         && request.resource.data.name.size() <= 100
         && request.resource.data.studentClass in [
-          'Class 9',
-          'Class 10',
-          'Class 11',
-          'Class 12'
+          'Class 9', 'Class 10', 'Class 11', 'Class 12'
         ]
         && request.resource.data.score is int
         && request.resource.data.score >= 0
         && request.resource.data.score <= 16
         && request.resource.data.imagesCount == 1
         && request.resource.data.handwrittenMark == null;
-
-      // Only the teacher can read or modify submissions.
       allow read, update, delete: if isTeacher();
 
       match /images/{imageId} {
-
-        // The photo is created together with its submission.
         allow create: if isStudent()
           && imageId == 'solution'
           && getAfter(
@@ -68,41 +60,48 @@ service cloud.firestore {
           && request.resource.data.imageData is string
           && request.resource.data.imageData.size() <= 900000
           && request.resource.data.questionNumber == 17;
-
         allow read, update, delete: if isTeacher();
       }
     }
 
     match /publicRankings/{rankingId} {
-
       allow read: if true;
-
       allow create: if isTeacher() ||
         (
           isStudent()
           && rankingId == request.resource.data.studentUid + "__" + request.resource.data.testId
-          && exists(
-            /databases/$(database)/documents/submissions/$(rankingId)
-          )
-          && get(
-            /databases/$(database)/documents/submissions/$(rankingId)
-          ).data.studentUid == request.auth.uid
+          && exists(/databases/$(database)/documents/submissions/$(rankingId))
+          && get(/databases/$(database)/documents/submissions/$(rankingId)).data.studentUid == request.auth.uid
           && request.resource.data.testId == get(/databases/$(database)/documents/submissions/$(rankingId)).data.testId
-          && request.resource.data.name ==
-            get(/databases/$(database)/documents/submissions/$(rankingId)).data.name
-          && request.resource.data.studentClass ==
-            get(/databases/$(database)/documents/submissions/$(rankingId)).data.studentClass
-          && request.resource.data.score ==
-            get(/databases/$(database)/documents/submissions/$(rankingId)).data.score
+          && request.resource.data.name == get(/databases/$(database)/documents/submissions/$(rankingId)).data.name
+          && request.resource.data.studentClass == get(/databases/$(database)/documents/submissions/$(rankingId)).data.studentClass
+          && request.resource.data.score == get(/databases/$(database)/documents/submissions/$(rankingId)).data.score
         );
+      allow update, delete: if isTeacher();
+    }
 
+    // Public scores for the one-digit multiplication game.
+    // Only a small, validated set of fields can be submitted.
+    match /multiplicationScores/{scoreId} {
+      allow read: if true;
+      allow create: if request.resource.data.keys().hasOnly(['name', 'score', 'correct', 'createdAt'])
+        && request.resource.data.name is string
+        && request.resource.data.name.size() >= 2
+        && request.resource.data.name.size() <= 50
+        && request.resource.data.score is int
+        && request.resource.data.score >= 0
+        && request.resource.data.score <= 1000000
+        && request.resource.data.correct is int
+        && request.resource.data.correct >= 0
+        && request.resource.data.correct <= 100000
+        && request.resource.data.score == request.resource.data.correct * 10
+        && request.resource.data.createdAt == request.time;
       allow update, delete: if isTeacher();
     }
 
     // Exam bank: everyone can view; only the teacher can upload or delete.
     match /examBank/{photoId} {
       allow read: if true;
-
       allow create: if isTeacher()
         && request.resource.data.keys().hasAll([
           'title', 'trimester', 'imageData', 'fileName', 'createdAt'
@@ -113,7 +112,6 @@ service cloud.firestore {
         && request.resource.data.imageData is string
         && request.resource.data.imageData.size() < 800000
         && request.resource.data.fileName is string;
-
       allow update: if false;
       allow delete: if isTeacher();
     }
