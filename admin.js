@@ -119,7 +119,7 @@ async function loadQuiz() {
   quiz = s.exists()
     ? s.data()
     : {
-        title: "اختبار الرياضيات",
+        title: "وظيفة 2",
         mcq: Array.from({ length: 16 }, (_, i) => ({
           q: `السؤال ${i + 1}`,
           options: ["الخيار الأول", "الخيار الثاني", "الخيار الثالث"],
@@ -129,6 +129,19 @@ async function loadQuiz() {
           { q: "السؤال 17 — الحل الكامل" }
         ]
       };
+
+  // Keep the existing question content; add the first test's title and schedule.
+  const defaultEnd = new Date("2026-11-24T23:59:00+01:00").getTime();
+  const scheduleNeedsSave = !quiz.title || !quiz.startAt || !quiz.endAt;
+  quiz.title = "وظيفة 2";
+  if (!quiz.startAt) quiz.startAt = Date.now();
+  if (!quiz.endAt) quiz.endAt = defaultEnd;
+  if (scheduleNeedsSave) {
+    await setDoc(doc(db, "settings", "quiz"), quiz, { merge: true });
+  }
+
+  $("testStartAt").value = toLocalDateTimeInput(quiz.startAt);
+  $("testEndAt").value = toLocalDateTimeInput(quiz.endAt);
 
   const firstImageQuestion = Array.isArray(quiz.imageQuestions)
     ? quiz.imageQuestions[0]
@@ -167,6 +180,12 @@ function mathEditor(key) {
       </button>
     </div>
   `;
+}
+
+function toLocalDateTimeInput(timestamp) {
+  const date = new Date(Number(timestamp));
+  const offset = date.getTimezoneOffset() * 60000;
+  return new Date(date.getTime() - offset).toISOString().slice(0, 16);
 }
 
 function renderEditor() {
@@ -285,6 +304,13 @@ function renderEditor() {
 }
 
 $("saveQuizBtn").onclick = async () => {
+  const startAt = Date.parse($("testStartAt").value);
+  const endAt = Date.parse($("testEndAt").value);
+  if (!Number.isFinite(startAt) || !Number.isFinite(endAt) || endAt <= startAt) {
+    $("saveStatus").textContent = "يرجى تحديد تاريخ بداية ونهاية صحيحين.";
+    return;
+  }
+
   document.querySelectorAll("[data-q][data-field]").forEach(el => {
     const i = +el.dataset.q;
 
@@ -301,8 +327,11 @@ $("saveQuizBtn").onclick = async () => {
   });
 
   try {
+    quiz.title = "وظيفة 2";
+    quiz.startAt = startAt;
+    quiz.endAt = endAt;
     await setDoc(doc(db, "settings", "quiz"), quiz);
-    $("saveStatus").textContent = "تم حفظ الأسئلة بنجاح.";
+    $("saveStatus").textContent = "تم حفظ أسئلة وظيفة 2 وموعد فتحه وإغلاقه بنجاح.";
   } catch (e) {
     $("saveStatus").textContent = "تعذر الحفظ: " + e.message;
   }
