@@ -454,20 +454,19 @@ $("closeStudentProfileBtn").onclick = () => {
    START EXAM
 ========================================= */
 
-function setAuthMode(mode, revealForm = true) {
+function setAuthMode(mode) {
   authMode = mode;
-  $("registerModeBtn").className = mode === "register" ? "primary" : "secondary";
-  $("loginModeBtn").className = mode === "login" ? "primary" : "secondary";
-  $("studentAuthForm").classList.toggle("hidden", !revealForm);
   $("authSubmitBtn").textContent = mode === "register"
-    ? "إنشاء الملف وبدء الاختبار ←"
+    ? "إنشاء الحساب وبدء الاختبار ←"
     : "الدخول وبدء الاختبار ←";
+  $("registerModeBtn").textContent = mode === "register"
+    ? "لديك حساب بالفعل؟ تسجيل الدخول"
+    : "ليس لديك حساب؟ إنشاء حساب جديد";
   $("studentPin").autocomplete = mode === "register" ? "new-password" : "current-password";
   $("notice").classList.add("hidden");
 }
 
-$("registerModeBtn").onclick = () => setAuthMode("register");
-$("loginModeBtn").onclick = () => setAuthMode("login");
+$("registerModeBtn").onclick = () => setAuthMode(authMode === "login" ? "register" : "login");
 
 async function beginStudentExam() {
   const user = auth.currentUser;
