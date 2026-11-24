@@ -1,5 +1,5 @@
 
-const CACHE_NAME = "my-exam-v1";
+const CACHE_NAME = "my-exam-v2";
 
 const FILES_TO_CACHE = [
   "./",
@@ -8,6 +8,7 @@ const FILES_TO_CACHE = [
   "./style.css",
   "./student.js",
   "./admin.js",
+  "./exam-bank.js",
   "./manifest.json"
 ];
 
