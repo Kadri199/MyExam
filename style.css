@@ -801,3 +801,18 @@ footer strong {
 .profile-item strong { display:block; overflow-wrap:anywhere; }
 .profile-result p { margin:8px 0; }
 .profile-result h3 { margin-top:0; }
+
+
+/* Focus mode while a pupil is taking an exam */
+body.exam-mode .wrap > :not(#quizCard) {
+  display: none !important;
+}
+
+body.exam-mode footer {
+  display: none !important;
+}
+
+body.exam-mode .wrap {
+  max-width: 900px;
+  margin-top: 18px;
+}
