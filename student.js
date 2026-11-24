@@ -244,14 +244,20 @@ students.forEach((student, index) => {
 }
 
 // Open the ranking page.
-$("showRankingBtn").onclick = () => {
+$("showRankingBtn").onclick = async () => {
   stopRankingListener();
+  let rankingTests=[{id:"wazifa2",title:"وظيفة 2"}];
+  try { const meta=await getDoc(doc(db,"settings","exams")); if(meta.exists() && Array.isArray(meta.data().tests)) rankingTests=meta.data().tests; } catch(e){ console.warn(e); }
 
   $("startCard").classList.add("hidden");
   $("rankingCard").classList.remove("hidden");
   $("notice").classList.add("hidden");
 
   $("rankingClasses").innerHTML = `
+    <label for="rankingTestSelect">اختر الاختبار</label>
+    <select id="rankingTestSelect" style="width:100%;margin-bottom:12px;">
+      ${rankingTests.map(t=>`<option value="${esc(t.id)}">${esc(t.title)}</option>`).join("")}
+    </select>
     <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:18px 0;">
       ${classes.map(className => `
         <button
@@ -278,6 +284,7 @@ $("rankingClasses").onclick = event => {
   if (!button) return;
 
   const selectedClass = button.dataset.class;
+  const selectedTest = $("rankingTestSelect")?.value || "wazifa2";
 
   if (!classes.includes(selectedClass)) return;
 
@@ -301,7 +308,8 @@ $("rankingClasses").onclick = event => {
   rankingUnsubscribe = onSnapshot(
     rankingQuery,
     snapshot => {
-      renderPublicRanking(snapshot, selectedClass);
+      const filtered = { docs: snapshot.docs.filter(d => (d.data().testId || "wazifa2") === selectedTest) };
+      renderPublicRanking(filtered, selectedClass);
     },
     error => {
       console.error("Public ranking error:", error);
