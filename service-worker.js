@@ -3,7 +3,8 @@ const CACHE_NAME = "my-exam-v18";
 
 const FILES_TO_CACHE = [
   "./",
-  "./index.html",\n  "./multiplication-game.html",
+  "./index.html",
+  "./multiplication-game.html",
   "./admin.html",
   "./exam-editor.html",
   "./style.css",
