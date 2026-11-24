@@ -7,7 +7,9 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 import {
-  getAuth, signInAnonymously
+  getAuth, createUserWithEmailAndPassword,
+  signInWithEmailAndPassword, sendPasswordResetEmail,
+  onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 import { firebaseConfig } from "./firebase-config.js";
@@ -18,6 +20,7 @@ const auth = getAuth(app);
 const $ = id => document.getElementById(id);
 
 let quiz, name = "", studentClass = "", page = 0;
+let authMode = "register";
 let answers = {};
 let answerFile = null;
 
@@ -315,49 +318,133 @@ $("closeRankingBtn").onclick = () => {
    START EXAM
 ========================================= */
 
-$("startBtn").onclick = async () => {
-  name = $("studentName").value.trim();
-  studentClass = $("studentClass").value;
+function setAuthMode(mode) {
+  authMode = mode;
+  $("registerFields").classList.toggle("hidden", mode !== "register");
+  $("registerModeBtn").className = mode === "register" ? "primary" : "secondary";
+  $("loginModeBtn").className = mode === "login" ? "primary" : "secondary";
+  $("authSubmitBtn").textContent = mode === "register"
+    ? "إنشاء الحساب وبدء الاختبار ←"
+    : "تسجيل الدخول وبدء الاختبار ←";
+  $("studentPassword").autocomplete = mode === "register" ? "new-password" : "current-password";
+  $("forgotPasswordBtn").classList.toggle("hidden", mode !== "login");
+  $("notice").classList.add("hidden");
+}
 
-  if (name.length < 3) {
-    notice("يرجى كتابة الاسم واللقب بشكل صحيح.");
+$("registerModeBtn").onclick = () => setAuthMode("register");
+$("loginModeBtn").onclick = () => setAuthMode("login");
+
+async function beginStudentExam() {
+  const user = auth.currentUser;
+  if (!user || user.email?.toLowerCase() === "afterdark706@gmail.com") {
+    throw new Error("يرجى الدخول بحساب التلميذ، وليس حساب الأستاذ.");
+  }
+
+  const uid = user.uid;
+  const previousRanking = await getDoc(doc(db, "publicRankings", uid));
+  if (previousRanking.exists()) {
+    throw new Error("لقد أرسلت الاختبار بهذا الحساب من قبل. لا يمكنك الإرسال مرة ثانية.");
+  }
+
+  await loadQuiz();
+  $("nameLabel").textContent = name;
+  $("startCard").classList.add("hidden");
+  $("quizCard").classList.remove("hidden");
+  render();
+}
+
+$("authSubmitBtn").onclick = async () => {
+  const email = $("studentEmail").value.trim().toLowerCase();
+  const password = $("studentPassword").value;
+
+  if (!email) {
+    notice("يرجى إدخال البريد الإلكتروني.");
+    return;
+  }
+  if (password.length < 6) {
+    notice("يجب أن تتكون كلمة المرور من 6 أحرف على الأقل.");
     return;
   }
 
-  if (!classes.includes(studentClass)) {
-    notice("يرجى اختيار القسم قبل بدء الاختبار.");
-    return;
-  }
-
-  $("startBtn").disabled = true;
+  $("authSubmitBtn").disabled = true;
 
   try {
-    await signInAnonymously(auth);
+    if (authMode === "register") {
+      name = $("studentName").value.trim();
+      studentClass = $("studentClass").value;
 
-    // Check whether this browser account has already submitted.
-    const uid = auth.currentUser.uid;
-    const previousRanking = await getDoc(
-      doc(db, "publicRankings", uid)
-    );
+      if (name.length < 3) throw new Error("يرجى كتابة الاسم واللقب الكامل.");
+      if (!classes.includes(studentClass)) throw new Error("يرجى اختيار القسم.");
 
-    if (previousRanking.exists()) {
-      throw new Error("لقد أرسلت الاختبار من هذا الجهاز من قبل. لا يمكنك الإرسال مرة ثانية.");
+      const credential = await createUserWithEmailAndPassword(auth, email, password);
+      await setDoc(doc(db, "studentProfiles", credential.user.uid), {
+        name,
+        studentClass,
+        createdAt: serverTimestamp()
+      });
+    } else {
+      const credential = await signInWithEmailAndPassword(auth, email, password);
+      const profile = await getDoc(doc(db, "studentProfiles", credential.user.uid));
+      if (!profile.exists()) {
+        await auth.signOut();
+        throw new Error("لم نعثر على ملف التلميذ. يرجى إنشاء حساب جديد أو التواصل مع الأستاذ.");
+      }
+      name = profile.data().name;
+      studentClass = profile.data().studentClass;
     }
 
-    await loadQuiz();
-
-    $("nameLabel").textContent = name;
-
-    $("startCard").classList.add("hidden");
-    $("quizCard").classList.remove("hidden");
-
-    render();
-
+    await beginStudentExam();
   } catch (error) {
-    notice(error.message || "تعذر الاتصال بالخادم.");
-    $("startBtn").disabled = false;
+    console.error("Student account error:", error);
+    const messages = {
+      "auth/email-already-in-use": "هذا البريد الإلكتروني مسجل من قبل. اختر تسجيل الدخول.",
+      "auth/invalid-email": "البريد الإلكتروني غير صحيح.",
+      "auth/weak-password": "كلمة المرور ضعيفة. استخدم 6 أحرف على الأقل.",
+      "auth/invalid-credential": "البريد الإلكتروني أو كلمة المرور غير صحيحة.",
+      "auth/user-not-found": "لا يوجد حساب بهذا البريد الإلكتروني.",
+      "auth/wrong-password": "كلمة المرور غير صحيحة.",
+      "auth/network-request-failed": "تحقق من اتصال الإنترنت ثم حاول مجدداً.",
+      "permission-denied": "تعذر حفظ بيانات الحساب. تحقق من صلاحيات قاعدة البيانات."
+    };
+    notice(messages[error.code] || error.message || "تعذر إتمام العملية.");
+  } finally {
+    $("authSubmitBtn").disabled = false;
   }
 };
+
+$("forgotPasswordBtn").onclick = async () => {
+  const email = $("studentEmail").value.trim().toLowerCase();
+  if (!email) {
+    notice("اكتب بريدك الإلكتروني أولاً لإرسال رابط استعادة كلمة المرور.");
+    return;
+  }
+  try {
+    await sendPasswordResetEmail(auth, email);
+    notice("إذا كان البريد مسجلاً، فسيصلك رابط إعادة تعيين كلمة المرور. تحقق أيضاً من البريد غير المرغوب فيه.");
+  } catch (error) {
+    const messages = {
+      "auth/invalid-email": "البريد الإلكتروني غير صحيح.",
+      "auth/user-not-found": "لا يوجد حساب بهذا البريد الإلكتروني.",
+      "auth/network-request-failed": "تحقق من اتصال الإنترنت ثم حاول مجدداً."
+    };
+    notice(messages[error.code] || "تعذر إرسال رابط الاستعادة حالياً.");
+  }
+};
+
+onAuthStateChanged(auth, async user => {
+  if (!user || user.email?.toLowerCase() === "afterdark706@gmail.com") return;
+  try {
+    const profile = await getDoc(doc(db, "studentProfiles", user.uid));
+    if (profile.exists()) {
+      name = profile.data().name;
+      studentClass = profile.data().studentClass;
+    }
+  } catch (error) {
+    console.warn("Could not restore student profile:", error);
+  }
+});
+
+setAuthMode("register");
 
 // Compress the single handwritten solution photo.
 async function compressImage(file) {
