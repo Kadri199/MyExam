@@ -273,8 +273,14 @@ $("showRankingBtn").onclick = async () => {
   `;
 
   $("rankingResults").innerHTML = `
-    <p class="muted small">اختر قسمك لعرض ترتيب التلاميذ.</p>
+    <p class="muted small">اختر الاختبار ثم القسم لعرض الترتيب.</p>
   `;
+  const testSelect = $("rankingTestSelect");
+  if (testSelect) testSelect.onchange = () => {
+    const chosen = document.querySelector(".ranking-class-btn[data-selected='true']");
+    if (chosen) chosen.click();
+    else $("rankingResults").innerHTML = '<p class="muted small">اختر القسم لعرض الترتيب.</p>';
+  };
 };
 
 // Select a class and listen for live ranking updates.
@@ -648,7 +654,7 @@ async function showClassRanking(submissionId, score) {
     const students = snapshot.docs.map(d => ({
       id: d.id,
       ...d.data()
-    }));
+    })).filter(student => (student.testId || "wazifa2") === activeTestId);
 
    students.sort(sortByFinalScore);
 
