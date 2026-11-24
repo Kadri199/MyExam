@@ -103,8 +103,7 @@ onAuthStateChanged(auth, async user => {
   const teacherEmail = "afterdark706@gmail.com";
   const isTeacherAccount = user
     && !user.isAnonymous
-    && user.email?.trim().toLowerCase() === teacherEmail
-    && user.providerData?.some(provider => provider.providerId === "password");
+    && user.email?.trim().toLowerCase() === teacherEmail;
 
   if (isTeacherAccount) {
     $("loginCard").classList.add("hidden");
