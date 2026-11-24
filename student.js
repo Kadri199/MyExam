@@ -447,6 +447,19 @@ async function beginStudentExam() {
   }
 
   const uid = user.uid;
+  const scheduleSnap = await getDoc(doc(db, "settings", "quiz"));
+  const schedule = scheduleSnap.exists() ? scheduleSnap.data() : null;
+  if (!schedule || !Number.isFinite(Number(schedule.startAt)) || !Number.isFinite(Number(schedule.endAt))) {
+    throw new Error("لم يتم تحديد موعد الاختبار بعد. يرجى التواصل مع الأستاذ.");
+  }
+  const now = Date.now();
+  if (now < Number(schedule.startAt)) {
+    throw new Error("لم يحن موعد بداية الاختبار بعد.");
+  }
+  if (now > Number(schedule.endAt)) {
+    throw new Error("انتهى وقت بدء الاختبار. لا يمكن فتح محاولة جديدة.");
+  }
+
   const previousRanking = await getDoc(doc(db, "publicRankings", uid));
   if (previousRanking.exists()) {
     throw new Error("لقد أرسلت الاختبار بهذا الحساب من قبل. لا يمكنك الإرسال مرة ثانية.");
