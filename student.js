@@ -432,9 +432,7 @@ async function showClassRanking(submissionId, score) {
       ...d.data()
     }));
 
-    students.sort((a, b) =>
-      Number(b.score || 0) - Number(a.score || 0)
-    );
+   students.sort(sortByFinalScore);
 
     let rows = "";
     let previousScore = null;
