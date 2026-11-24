@@ -466,7 +466,7 @@ function setAuthMode(mode, revealForm = true) {
   $("notice").classList.add("hidden");
 }
 
-$("registerModeBtn").onclick = () => setAuthMode("login", false);
+$("registerModeBtn").onclick = () => setAuthMode("register");
 $("loginModeBtn").onclick = () => setAuthMode("login");
 
 async function beginStudentExam() {
