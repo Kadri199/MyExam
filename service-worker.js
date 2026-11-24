@@ -1,5 +1,5 @@
 
-const CACHE_NAME = "my-exam-v12";
+const CACHE_NAME = "my-exam-v13";
 
 const FILES_TO_CACHE = [
   "./",
