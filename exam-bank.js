@@ -42,18 +42,48 @@ function renderPublicGallery() {
     return;
   }
 
-  gallery.innerHTML = photos.map(photo => {
-    const safeTitle = escapeHtml(photo.title || "فرض أو اختبار");
-    const safeDate = escapeHtml(formatDate(photo.createdAt));
-    const safeFile = escapeHtml((photo.title || "exam").replace(/[\\/:*?"<>|]/g, "-")) + ".jpg";
-    return '<article style="border:1px solid #e2eaf5;border-radius:13px;padding:13px;margin:12px 0;background:#fff;">' +
-      '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px;">' +
-      '<strong>' + safeTitle + '</strong><span class="muted small">' + safeDate + '</span></div>' +
-      '<img src="' + photo.imageData + '" alt="' + safeTitle + '" loading="lazy" ' +
-      'style="display:block;width:100%;height:auto;max-height:850px;object-fit:contain;border-radius:9px;background:#f3f7fd;">' +
-      '<a href="' + photo.imageData + '" download="' + safeFile + '" class="secondary" ' +
-      'style="display:inline-block;margin-top:12px;padding:9px 14px;border-radius:9px;font-weight:700;">⬇ تنزيل الصورة</a></article>';
+  // New uploads share one groupId; older uploads remain as individual exam cards.
+  const groups = new Map();
+  photos.forEach(photo => {
+    const key = photo.groupId || photo.id;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(photo);
+  });
+
+  gallery.innerHTML = Array.from(groups.entries()).map(([groupId, groupPhotos]) => {
+    const first = groupPhotos[0];
+    const safeTitle = escapeHtml(first.title || "فرض أو اختبار");
+    const safeDate = escapeHtml(formatDate(first.groupCreatedAt || first.createdAt));
+    const safeGroupId = escapeHtml(groupId);
+    const count = groupPhotos.length;
+    const images = groupPhotos.map((photo, index) => {
+      const safeFile = escapeHtml((photo.fileName || (first.title || "exam") + "-" + (index + 1))
+        .replace(/[\\/:*?"<>|]/g, "-"));
+      return '<div style="padding:12px 0;border-top:1px solid #e2eaf5;">' +
+        '<img src="' + photo.imageData + '" alt="' + safeTitle + ' - ' + (index + 1) + '" loading="lazy" ' +
+        'style="display:block;width:100%;height:auto;max-height:850px;object-fit:contain;border-radius:9px;background:#f3f7fd;">' +
+        '<a href="' + photo.imageData + '" download="' + safeFile + '" class="secondary" ' +
+        'style="display:inline-block;margin-top:10px;padding:9px 14px;border-radius:9px;font-weight:700;">⬇ تنزيل الصورة ' + (index + 1) + '</a></div>';
+    }).join("");
+
+    return '<article style="border:1px solid #dbe6f3;border-radius:14px;padding:13px;margin:12px 0;background:#fff;">' +
+      '<button type="button" data-exam-group="' + safeGroupId + '" aria-expanded="false" ' +
+      'style="width:100%;display:flex;justify-content:space-between;align-items:center;gap:10px;text-align:right;background:#f3f7fd;color:#173b67;padding:14px;border-radius:10px;">' +
+      '<span><strong>' + safeTitle + '</strong><small style="display:block;color:#718096;font-weight:400;margin-top:3px;">' +
+      count + ' صورة' + (safeDate ? ' • ' + safeDate : '') + '</small></span><span data-group-arrow>＋</span></button>' +
+      '<div data-group-content hidden style="padding:4px 8px 0;">' + images + '</div></article>';
   }).join("");
+
+  gallery.querySelectorAll("[data-exam-group]").forEach(button => {
+    button.addEventListener("click", () => {
+      const content = button.nextElementSibling;
+      const isOpen = button.getAttribute("aria-expanded") === "true";
+      button.setAttribute("aria-expanded", String(!isOpen));
+      content.hidden = isOpen;
+      const arrow = button.querySelector("[data-group-arrow]");
+      if (arrow) arrow.textContent = isOpen ? "＋" : "−";
+    });
+  });
 }
 
 document.querySelectorAll("[data-bank-term]").forEach(button => {
@@ -179,12 +209,18 @@ if (uploadButton) {
 
     uploadButton.disabled = true;
     let uploaded = 0;
+    const groupId = (crypto.randomUUID ? crypto.randomUUID() :
+      "group-" + Date.now() + "-" + Math.random().toString(36).slice(2));
+    const groupTitle = title || "فرض أو اختبار";
+    const groupCreatedAt = serverTimestamp();
     try {
       for (let i = 0; i < files.length; i++) {
         status.textContent = "جارٍ ضغط ورفع الصورة " + (i + 1) + " من " + files.length + "...";
         const imageData = await compressPhoto(files[i]);
         await addDoc(collection(db, "examBank"), {
-          title: title || files[i].name.replace(/\.[^.]+$/, ""),
+          title: groupTitle,
+          groupId,
+          groupCreatedAt,
           trimester,
           imageData,
           fileName: files[i].name.slice(0, 180),
