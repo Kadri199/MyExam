@@ -590,7 +590,7 @@ onAuthStateChanged(auth, async user => {
   }
 });
 
-setAuthMode("register");
+setAuthMode("login");
 
 // Compress the single handwritten solution photo.
 async function compressImage(file) {
