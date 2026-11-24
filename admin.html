@@ -110,9 +110,15 @@
       يجب أن يكون عدد أسئلة الاختيار 16 والأسئلة المصورة 4.
     </p>
 
+    <h3>الاختبار: وظيفة 2</h3>
+    <label for="testStartAt">تاريخ ووقت بداية الاختبار</label>
+    <input id="testStartAt" type="datetime-local">
+    <label for="testEndAt">تاريخ ووقت نهاية الاختبار</label>
+    <input id="testEndAt" type="datetime-local" value="2026-11-24T23:59">
+
     <div id="editor"></div>
 
-    <button id="saveQuizBtn" class="primary">حفظ الأسئلة</button>
+    <button id="saveQuizBtn" class="primary">حفظ الأسئلة والموعد</button>
 
     <span id="saveStatus" class="muted small"></span>
   </section>
