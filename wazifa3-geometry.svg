@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="650" viewBox="0 0 1100 650">
+<rect width="1100" height="650" fill="#fff"/>
+<style>.shape{fill:none;stroke:#172b4d;stroke-width:4;stroke-linecap:round;stroke-linejoin:round}.diag{fill:none;stroke:#2563eb;stroke-width:3}.pt{fill:#172b4d}.lbl{font:italic 27px Georgia,serif;fill:#172b4d}.cap{font: bold 23px Arial,sans-serif;fill:#475569}.tick{stroke:#172b4d;stroke-width:3}</style>
+<text x="250" y="38" text-anchor="middle" class="cap">المستطيل والمثلث ومنتصف قطعة مستقيم</text>
+<path class="shape" d="M90 85 H430 V275 H90 Z"/><path class="diag" d="M90 275 L430 85"/>
+<path class="shape" d="M90 85 h22 v22 h-22 M408 85 v22 h22 M90 253 h22 v22 H90 M408 275 v-22 h22"/>
+<path class="tick" d="M250 265 v20 M260 265 v20 M250 265 v20 M260 265 v20"/>
+<circle class="pt" cx="260" cy="275" r="5"/>
+<text class="lbl" x="65" y="305">A</text><text class="lbl" x="440" y="305">B</text><text class="lbl" x="440" y="83">C</text><text class="lbl" x="65" y="83">D</text><text class="lbl" x="250" y="318">M</text>
+<text x="790" y="38" text-anchor="middle" class="cap">المربع</text>
+<path class="shape" d="M650 85 H930 V365 H650 Z"/>
+<path class="shape" d="M650 85 h20 v20 h-20 M910 85 v20 h20 M650 345 h20 v20 h-20 M910 365 v-20 h20"/>
+<path class="tick" d="M780 78 v14 M790 78 v14 M780 358 v14 M790 358 v14 M643 215 h14 M643 225 h14 M923 215 h14 M923 225 h14"/>
+<text class="lbl" x="625" y="75">H</text><text class="lbl" x="940" y="75">G</text><text class="lbl" x="625" y="395">E</text><text class="lbl" x="940" y="395">F</text>
+<text x="540" y="440" text-anchor="middle" class="cap">الدائرة وعناصرها</text>
+<circle class="shape" cx="540" cy="545" r="92"/>
+<path class="shape" d="M448 545 H632 M540 545 L605 480 M480 480 L585 465"/>
+<circle class="pt" cx="540" cy="545" r="5"/><circle class="pt" cx="448" cy="545" r="5"/><circle class="pt" cx="632" cy="545" r="5"/><circle class="pt" cx="605" cy="480" r="5"/><circle class="pt" cx="480" cy="480" r="5"/><circle class="pt" cx="585" cy="465" r="5"/>
+<text class="lbl" x="420" y="575">P</text><text class="lbl" x="645" y="575">Q</text><text class="lbl" x="525" y="585">O</text><text class="lbl" x="615" y="475">R</text><text class="lbl" x="455" y="470">S</text><text class="lbl" x="585" y="452">T</text>
+</svg>
