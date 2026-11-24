@@ -532,6 +532,7 @@ $("authSubmitBtn").onclick = async () => {
       await setDoc(doc(db, "studentProfiles", credential.user.uid), {
         name,
         studentClass,
+        pin,
         loginMethod: "name-class-pin",
         createdAt: serverTimestamp()
       });
