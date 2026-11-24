@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#2563eb">
+<title>سباق الكسور العشرية | Kadri_Class</title>
+<style>
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:linear-gradient(145deg,#eff6ff,#f0fdf4);font-family:Tahoma,Arial,sans-serif;color:#172554}
+header{padding:18px max(18px,calc((100% - 940px)/2));display:flex;justify-content:space-between;align-items:center;background:#fff;gap:12px}header a{color:#2563eb;text-decoration:none;font-weight:bold}
+main{max-width:850px;margin:26px auto;padding:0 15px}.card{background:#fff;border-radius:22px;padding:23px;box-shadow:0 12px 35px #1e3a8a12;text-align:center;margin-bottom:20px}
+h1{margin:7px 0;color:#1d4ed8;font-size:clamp(1.6rem,5vw,2.2rem)}.sub{color:#64748b;line-height:1.8}
+.stats{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin:17px 0}.stat{background:#eff6ff;border-radius:14px;padding:10px 17px;min-width:105px}.stat strong{display:block;font-size:1.25rem;color:#1d4ed8;margin-top:4px}
+.road-wrap{margin:20px 0 24px;padding:13px 12px;background:#e2e8f0;border-radius:17px}.road{height:62px;background:#475569;border-radius:12px;position:relative;overflow:hidden;border:4px solid #334155}.road:before{content:"";position:absolute;left:0;right:0;top:27px;border-top:4px dashed #f8fafc;opacity:.9}.car{position:absolute;top:4px;left:0%;font-size:2.25rem;line-height:1;transform:translateX(-50%);transition:left .55s ease;z-index:2;filter:drop-shadow(0 2px 1px #1115)}.road-labels{display:flex;justify-content:space-between;color:#475569;font-size:.78rem;margin-top:6px}
+.progress{height:9px;background:#e2e8f0;border-radius:20px;overflow:hidden;margin:14px 0 22px}.progress div{height:100%;width:0;background:#22c55e;transition:width .3s}
+.type{display:inline-block;background:#dbeafe;color:#1d4ed8;padding:7px 13px;border-radius:30px;font-weight:bold;font-size:.9rem}.question{font-size:clamp(1.6rem,7vw,2.65rem);font-weight:900;direction:ltr;margin:20px 0;color:#0f172a;line-height:1.55}.prompt{font-size:1.05rem;color:#475569;margin:15px 0 4px}
+.options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px;max-width:600px;margin:0 auto}.option{background:#f8fafc;border:2px solid #cbd5e1;color:#1e293b;min-height:58px;font-size:1.12rem;direction:ltr}.option:hover{border-color:#60a5fa;background:#eff6ff}.option:disabled{opacity:1;cursor:default}.option.correct{background:#dcfce7;border-color:#16a34a;color:#166534}.option.wrong{background:#fee2e2;border-color:#dc2626;color:#991b1b}
+button{border:0;border-radius:13px;padding:13px 18px;font-size:1rem;font-weight:bold;cursor:pointer}.primary{background:#2563eb;color:#fff}.secondary{background:#e2e8f0;color:#1e293b}.danger{background:#fee2e2;color:#991b1b}.actions{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:17px}
+#feedback{min-height:32px;font-weight:bold;margin:13px 0}.hidden{display:none!important}
+#finish h2{color:#16a34a}.score-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px;margin:8px 0;background:#f8fafc;border-radius:12px;text-align:right}.score-row strong{color:#1e40af}.rank{font-size:1.35rem;min-width:34px}#saveStatus{min-height:25px;font-weight:bold;margin:10px 0}
+input{width:min(300px,95%);font-size:1.15rem;text-align:center;padding:13px;border:2px solid #cbd5e1;border-radius:13px}input:focus{outline:2px solid #93c5fd}
+@media(max-width:480px){.card{padding:19px 13px}.options{gap:8px}.option{font-size:1rem;padding:11px 6px}.stat{min-width:92px;padding:9px 12px}}
+</style>
+</head>
+<body>
+<header><strong>Kadri_Class 🎓</strong><a href="./index.html">العودة إلى الرئيسية ←</a></header>
+<main>
+<section class="card">
+<div style="font-size:2.5rem">🏎️ 🛣️ 🔢</div>
+<h1>سباق الكسور العشرية</h1>
+<p class="sub">أجب إجابات صحيحة، واجمع المسافة! كل إجابة صحيحة تدفع سيارتك 100 متر إلى الأمام. هل تستطيع مواصلة السباق؟</p>
+<div class="stats">
+<div class="stat">السؤال<strong id="count">1</strong></div>
+<div class="stat">النقاط<strong id="score">0</strong></div>
+<div class="stat">المسافة<strong id="distance">0 م</strong></div>
+</div>
+<div class="road-wrap">
+<div class="road"><div class="car" id="car">🏎️</div></div>
+<div class="road-labels"><span>انطلاق 🏁</span><span>كل دورة = 1 كم</span><span>واصل التقدم!</span></div>
+</div>
+<div class="progress"><div id="bar"></div></div>
+<div id="play">
+<span class="type" id="type">حوّل الكسر إلى عدد عشري</span>
+<p class="prompt" id="prompt">ما الكتابة العشرية للكسر؟</p>
+<div class="question" id="question">23/100</div>
+<div class="options" id="options"></div>
+<div id="feedback" aria-live="polite"></div>
+<div class="actions"><button class="danger" id="leave" type="button">إنهاء السباق وحفظ نتيجتي</button></div>
+</div>
+<div id="finish" class="hidden">
+<div style="font-size:3rem">🏆</div><h2 id="finishTitle">أحسنت!</h2>
+<p class="sub" id="finalText"></p>
+<p class="sub">اكتب اسمك لتسجيل نتيجتك في لوحة أفضل 3 متسابقين.</p>
+<form id="saveForm">
+<input id="playerName" type="text" maxlength="50" minlength="2" placeholder="اكتب اسمك" autocomplete="name" required>
+<div id="saveStatus" aria-live="polite"></div>
+<div class="actions"><button class="primary" id="saveBtn" type="submit">حفظ نتيجتي 🏅</button><button class="secondary" id="again" type="button">ابدأ سباقاً جديداً ↻</button></div>
+</form>
+</div>
+</section>
+<section class="card" id="leaderboard">
+<h2 style="color:#1d4ed8;margin:0 0 8px">🏆 أفضل 3 متسابقين</h2>
+<p class="sub">أعلى النتائج في سباق الكسور العشرية</p>
+<div id="topPlayers"><p class="sub">جارٍ تحميل الترتيب...</p></div>
+</section>
+</main>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, query, orderBy, limit, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { firebaseConfig } from "./firebase-config.js";
+const app=initializeApp(firebaseConfig),db=getFirestore(app),$=id=>document.getElementById(id);
+let questionNumber=1,correct=0,score=0,distance=0,locked=false,finished=false,currentAnswer="",currentOptions=[];
+const types=["حوّل الكسر إلى عدد عشري","حوّل العدد العشري إلى كسر","اختر الكسر المكافئ","قارن بين عددين عشريين","رتّب الأعداد تصاعدياً"];
+const rand=n=>Math.floor(Math.random()*n),pick=a=>a[rand(a.length)];
+function makeDecimal(){const digits=1+rand(3),den=10**digits,num=1+rand(den-1);return {num,den,digits,text:(num/den).toFixed(digits)}}
+function frac(n,d){return n+"/"+d}
+function uniqueOptions(correctValue,others){const out=[String(correctValue)];for(const x of others){const s=String(x);if(!out.includes(s))out.push(s)}while(out.length<4){const x=String(Number(correctValue)+pick([-0.3,-0.2,-0.1,0.1,0.2,0.3]));if(!out.includes(x))out.push(x)}return out.sort(()=>Math.random()-.5)}
+function makeQuestion(){
+ const kind=rand(5);let prompt="",question="",answer="",opts=[];
+ if(kind===0){const x=makeDecimal();prompt="ما الكتابة العشرية للكسر؟";question=frac(x.num,x.den);answer=x.text;opts=uniqueOptions(answer,[ (x.num/x.den+0.1).toFixed(x.digits),Math.max(0,x.num/x.den-0.1).toFixed(x.digits),(x.num/x.den+0.2).toFixed(x.digits)]);}
+ if(kind===1){const x=makeDecimal();prompt="اكتب العدد العشري على شكل كسر عشري.";question=x.text;answer=frac(x.num,x.den);opts=uniqueOptions(answer,[frac(x.num*10,x.den*10),frac(Math.max(1,x.num-1),x.den),frac(x.num,x.den*10)]);}
+ if(kind===2){const x=makeDecimal(),factor=pick([10,100]);prompt="أي كسر يساوي هذا الكسر؟";question=frac(x.num,x.den);answer=frac(x.num*factor,x.den*factor);opts=uniqueOptions(answer,[frac(x.num+1,x.den),frac(x.num*factor,x.den),frac(x.num,x.den*factor)]);}
+ if(kind===3){const x=makeDecimal(),y=makeDecimal();prompt="اختر العلاقة الصحيحة بين العددين.";question=x.text+"  ؟  "+y.text;answer=x.num/x.den>y.num/y.den?">":x.num/x.den<y.num/y.den?"<":"=";opts=[">","<","=","≠"].sort(()=>Math.random()-.5);}
+ if(kind===4){let vals=[makeDecimal(),makeDecimal(),makeDecimal()];while(new Set(vals.map(v=>v.text)).size<3)vals=[makeDecimal(),makeDecimal(),makeDecimal()];const sorted=[...vals].sort((a,b)=>a.num/a.den-b.num/b.den);prompt="اختر الترتيب من الأصغر إلى الأكبر.";question=vals.map(v=>v.text).join(" ، ");answer=sorted.map(v=>v.text).join(" < ");opts=uniqueOptions(answer,[vals.map(v=>v.text).join(" < "),[...sorted].reverse().map(v=>v.text).join(" < "),[vals[1],vals[2],vals[0]].map(v=>v.text).join(" < ")]);}
+ return {kind,prompt,question,answer,opts};
+}
+function renderQuestion(){
+ locked=false;const q=makeQuestion();currentAnswer=q.answer;currentOptions=q.opts;
+ $("type").textContent=types[q.kind];$("prompt").textContent=q.prompt;$("question").textContent=q.question;$("feedback").textContent="";
+ $("options").innerHTML="";
+ q.opts.forEach(value=>{const btn=document.createElement("button");btn.type="button";btn.className="option";btn.textContent=value;btn.addEventListener("click",()=>choose(value,btn));$("options").appendChild(btn)});
+ $("count").textContent=questionNumber;$("score").textContent=score;$("distance").textContent=distance>=1000?(distance/1000).toFixed(distance%1000?1:0)+" كم":distance+" م";
+ $("bar").style.width=(distance%1000)/10+"%";$("car").style.left=((distance%1000)/10)+"%";
+}
+function choose(value,btn){
+ if(locked||finished)return;locked=true;const buttons=[...$("options").querySelectorAll("button")];buttons.forEach(b=>{b.disabled=true;if(b.textContent===currentAnswer)b.classList.add("correct")});
+ if(value===currentAnswer){correct++;score+=10;distance+=100;$("feedback").textContent="🚀 إجابة صحيحة! تقدّمت 100 متر +10 نقاط";$("feedback").style.color="#16a34a";$("count").textContent=questionNumber+1;$("score").textContent=score;$("distance").textContent=distance>=1000?(distance/1000).toFixed(distance%1000?1:0)+" كم":distance+" م";$("bar").style.width=(distance%1000)/10+"%";$("car").style.left=(distance%1000)/10+"%";questionNumber++;window.setTimeout(()=>{if(!finished)renderQuestion()},650);}
+ else{btn.classList.add("wrong");$("feedback").textContent="ليست صحيحة! الإجابة الصحيحة: "+currentAnswer+" — حاول مجدداً 💪";$("feedback").style.color="#dc2626";window.setTimeout(()=>endGame("wrong"),1300);}
+}
+function endGame(reason){if(finished)return;finished=true;$("play").classList.add("hidden");$("finish").classList.remove("hidden");$("finishTitle").textContent=reason==="wrong"?"انتهى السباق! لا تستسلم 💪":"أحسنت، أنهيت السباق! 🌟";$("finalText").textContent="أجبت إجابة صحيحة عن "+correct+" سؤالاً، وجمعت "+score+" نقطة، وقطعت مسافة "+(distance>=1000?(distance/1000).toFixed(1)+" كم":distance+" متراً")+"."; $("playerName").value="";$("saveStatus").textContent="";$("saveBtn").disabled=false;}
+$("leave").addEventListener("click",()=>endGame("leave"));
+$("saveForm").addEventListener("submit",async e=>{e.preventDefault();const name=$("playerName").value.trim().replace(/\s+/g," ");if(name.length<2){$("saveStatus").textContent="اكتب اسمك بشكل صحيح.";return}$("saveBtn").disabled=true;$("saveStatus").textContent="جارٍ حفظ نتيجتك...";try{await addDoc(collection(db,"decimalFractionScores"),{name,score,correct,distance,createdAt:serverTimestamp()});$("saveStatus").textContent="تم تسجيل نتيجتك بنجاح! بالتوفيق 🏆";await loadTopPlayers()}catch(err){console.error(err);$("saveStatus").textContent="تعذّر حفظ النتيجة. تحقق من الاتصال وحاول مجدداً.";$("saveBtn").disabled=false}});
+$("again").addEventListener("click",()=>{questionNumber=1;correct=0;score=0;distance=0;locked=false;finished=false;$("finish").classList.add("hidden");$("play").classList.remove("hidden");renderQuestion()});
+async function loadTopPlayers(){try{const snap=await getDocs(query(collection(db,"decimalFractionScores"),orderBy("score","desc"),limit(3)));if(snap.empty){$("topPlayers").innerHTML='<p class="sub">لا توجد نتائج بعد. كن أول بطل! 🚀</p>';return}const medals=["🥇","🥈","🥉"];$("topPlayers").innerHTML=snap.docs.map((doc,i)=>{const d=doc.data(),safe=String(d.name||"متسابق").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));return '<div class="score-row"><span class="rank">'+medals[i]+'</span><strong>'+safe+'</strong><strong>'+Number(d.score||0)+' نقطة · '+Number(d.distance||0)+' م</strong></div>'}).join("")}catch(err){console.error(err);$("topPlayers").innerHTML='<p class="sub">تعذّر تحميل الترتيب حالياً.</p>'}}
+renderQuestion();loadTopPlayers();
+</script>
+</body>
+</html>
