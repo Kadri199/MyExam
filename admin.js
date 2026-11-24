@@ -21,6 +21,7 @@ const $ = id => document.getElementById(id);
 
 let quiz = null;
 let submissions = [];
+let studentProfiles = [];
 let selectedClass = "Class 9";
 let tests=[];
 let selectedTestId="wazifa2";
@@ -110,7 +111,7 @@ onAuthStateChanged(auth, async user => {
   }
 });
 
-async function loadAll(){ await loadTests(); await loadResults(); }
+async function loadAll(){ await loadTests(); await loadResults(); await loadStudentPins(); }
 
 async function loadTests(){
  const legacy=await getDoc(doc(db,"settings","quiz"));
@@ -398,6 +399,38 @@ async function loadResults() {
     notice("تعذر تحميل النتائج: " + error.message);
   }
 }
+
+async function loadStudentPins() {
+  try {
+    const snap = await getDocs(collection(db, "studentProfiles"));
+    studentProfiles = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderStudentPins();
+  } catch (error) {
+    console.error("Student PIN list error:", error);
+    $("studentPinsBody").innerHTML = '<tr><td colspan="3">تعذر تحميل قائمة الرموز. تحقق من صلاحيات قاعدة البيانات.</td></tr>';
+  }
+}
+
+function renderStudentPins() {
+  const search = ($("studentPinSearch")?.value || "").trim().toLowerCase();
+  const filtered = studentProfiles.filter(p =>
+    String(p.name || "").toLowerCase().includes(search) ||
+    String(p.studentClass || "").toLowerCase().includes(search) ||
+    String(p.studentClass || "").replace("Class ", "1م").includes(search)
+  );
+  $("studentPinsBody").innerHTML = filtered.length
+    ? filtered.map(p => `
+        <tr>
+          <td>${esc(p.name || "—")}</td>
+          <td>${esc(String(p.studentClass || "").replace("Class ", "1م"))}</td>
+          <td><strong style="direction:ltr;display:inline-block;">${p.pin ? esc(p.pin) : "غير متوفر — حساب قديم"}</strong></td>
+        </tr>
+      `).join("")
+    : '<tr><td colspan="3">لا توجد نتائج مطابقة.</td></tr>';
+}
+
+$("studentPinSearch").addEventListener("input", renderStudentPins);
+$("refreshStudentPinsBtn").onclick = loadStudentPins;
 
 function renderClassRanking() {
   const classResults = getRankedResults(
