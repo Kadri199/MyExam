@@ -500,7 +500,13 @@ async function beginStudentExam() {
 
   await loadQuiz();
   $("nameLabel").textContent = name;
+
+  // Focus mode: during the exam, keep only the site header and the quiz visible.
+  document.body.classList.add("exam-mode");
   $("startCard").classList.add("hidden");
+  $("rankingCard").classList.add("hidden");
+  $("studentProfileCard").classList.add("hidden");
+  $("examBankPublic").classList.add("hidden");
   $("quizCard").classList.remove("hidden");
   render();
 }
@@ -929,6 +935,7 @@ $("submitBtn").onclick = async () => {
       rankingWarning = " تعذر تحديث ترتيب القسم حالياً.";
     }
 
+    document.body.classList.remove("exam-mode");
     $("quizCard").classList.add("hidden");
     $("doneCard").classList.remove("hidden");
 
