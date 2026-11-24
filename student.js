@@ -469,6 +469,9 @@ async function beginStudentExam() {
   const scheduleSnap=await getDoc(doc(db,"examTests",activeTestId));
   const schedule=scheduleSnap.exists()?scheduleSnap.data():null;
   activeTestName=schedule?.title||"وظيفة 2";
+  const startText = new Date(Number(schedule.startAt)).toLocaleString("ar-DZ", { dateStyle: "medium", timeStyle: "short" });
+  const endText = new Date(Number(schedule.endAt)).toLocaleString("ar-DZ", { dateStyle: "medium", timeStyle: "short" });
+  $("examDuration").textContent = "مدة الاختبار: من " + startText + " إلى " + endText;
   if (!schedule || !Number.isFinite(Number(schedule.startAt)) || !Number.isFinite(Number(schedule.endAt))) {
     throw new Error("لم يتم تحديد موعد الاختبار بعد. يرجى التواصل مع الأستاذ.");
   }
