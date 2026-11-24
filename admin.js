@@ -100,13 +100,23 @@ $("loginBtn").onclick = async () => {
 $("logoutBtn").onclick = () => signOut(auth);
 
 onAuthStateChanged(auth, async user => {
-  if (user && !user.isAnonymous) {
+  const teacherEmail = "afterdark706@gmail.com";
+  const isTeacherAccount = user
+    && !user.isAnonymous
+    && user.email?.trim().toLowerCase() === teacherEmail
+    && user.providerData?.some(provider => provider.providerId === "password");
+
+  if (isTeacherAccount) {
     $("loginCard").classList.add("hidden");
     $("dashboard").classList.remove("hidden");
     await loadAll();
   } else {
     $("loginCard").classList.remove("hidden");
     $("dashboard").classList.add("hidden");
+
+    if (user && !user.isAnonymous) {
+      notice("هذا الحساب ليس حساب الأستاذ المصرّح له. سجّل الدخول باستعمال " + teacherEmail);
+    }
   }
 });
 
