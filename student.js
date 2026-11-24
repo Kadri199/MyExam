@@ -8,7 +8,7 @@ import {
 
 import {
   getAuth, createUserWithEmailAndPassword,
-  signInWithEmailAndPassword, sendPasswordResetEmail,
+  signInWithEmailAndPassword,
   onAuthStateChanged, signOut
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
@@ -53,6 +53,19 @@ function esc(value) {
     "&": "&amp;", "<": "&lt;", ">": "&gt;",
     '"': "&quot;", "'": "&#39;"
   }[c]));
+}
+
+// Create a private Firebase Auth alias from the pupil's name, class and PIN.
+// Pupils never see or need to enter this generated alias.
+async function makeStudentAuthEmail(fullName, classId, pin) {
+  if (!globalThis.crypto?.subtle) {
+    throw new Error("المتصفح لا يدعم إنشاء الحساب الآمن. حدّث المتصفح وحاول مجدداً.");
+  }
+  const normalizedName = String(fullName).normalize("NFC").trim().replace(/\\s+/g, " ").toLowerCase();
+  const source = classId + "|" + normalizedName + "|" + pin;
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(source));
+  const hash = [...new Uint8Array(digest)].map(byte => byte.toString(16).padStart(2, "0")).join("");
+  return "student-" + hash + "@kadri-class.com";
 }
 
 // Convert text containing \( LaTeX \) into readable mathematical formulas.
@@ -418,7 +431,7 @@ async function openStudentProfile() {
       <div class="profile-grid">
         <div class="profile-item"><span>الاسم واللقب</span><strong>${esc(name)}</strong></div>
         <div class="profile-item"><span>القسم</span><strong>${esc(studentClass.replace("Class ", "1م"))}</strong></div>
-        <div class="profile-item"><span>البريد الإلكتروني</span><strong dir="ltr">${esc(user.email || "—")}</strong></div>
+        <div class="profile-item"><span>طريقة الدخول</span><strong>الاسم + القسم + الرمز السري</strong></div>
         <div class="profile-item"><span>الاختبارات المكتملة</span><strong>${completed}</strong></div>
         <div class="profile-item"><span>أفضل علامة مسجلة</span><strong>${bestMark}</strong></div>
       </div>
@@ -443,14 +456,12 @@ $("closeStudentProfileBtn").onclick = () => {
 
 function setAuthMode(mode) {
   authMode = mode;
-  $("registerFields").classList.toggle("hidden", mode !== "register");
   $("registerModeBtn").className = mode === "register" ? "primary" : "secondary";
   $("loginModeBtn").className = mode === "login" ? "primary" : "secondary";
   $("authSubmitBtn").textContent = mode === "register"
-    ? "إنشاء الحساب وبدء الاختبار ←"
-    : "تسجيل الدخول وبدء الاختبار ←";
-  $("studentPassword").autocomplete = mode === "register" ? "new-password" : "current-password";
-  $("forgotPasswordBtn").classList.toggle("hidden", mode !== "login");
+    ? "إنشاء الملف وبدء الاختبار ←"
+    : "الدخول وبدء الاختبار ←";
+  $("studentPin").autocomplete = mode === "register" ? "new-password" : "current-password";
   $("notice").classList.add("hidden");
 }
 
@@ -495,80 +506,66 @@ async function beginStudentExam() {
 }
 
 $("authSubmitBtn").onclick = async () => {
-  const email = $("studentEmail").value.trim().toLowerCase();
-  const password = $("studentPassword").value;
+  name = $("studentName").value.trim().replace(/\\s+/g, " ");
+  studentClass = $("studentClass").value;
+  const pin = $("studentPin").value.trim();
 
-  if (!email) {
-    notice("يرجى إدخال البريد الإلكتروني.");
+  if (name.length < 3) {
+    notice("يرجى كتابة الاسم واللقب الكامل.");
     return;
   }
-  if (password.length < 6) {
-    notice("يجب أن تتكون كلمة المرور من 6 أحرف على الأقل.");
+  if (!classes.includes(studentClass)) {
+    notice("يرجى اختيار القسم.");
+    return;
+  }
+  if (!/^\\d{6}$/.test(pin)) {
+    notice("يجب إدخال رمز سري مكوّن من 6 أرقام بالضبط.");
     return;
   }
 
   $("authSubmitBtn").disabled = true;
-
   try {
+    const authEmail = await makeStudentAuthEmail(name, studentClass, pin);
+
     if (authMode === "register") {
-      name = $("studentName").value.trim();
-      studentClass = $("studentClass").value;
-
-      if (name.length < 3) throw new Error("يرجى كتابة الاسم واللقب الكامل.");
-      if (!classes.includes(studentClass)) throw new Error("يرجى اختيار القسم.");
-
-      const credential = await createUserWithEmailAndPassword(auth, email, password);
+      const credential = await createUserWithEmailAndPassword(auth, authEmail, pin);
       await setDoc(doc(db, "studentProfiles", credential.user.uid), {
         name,
         studentClass,
+        loginMethod: "name-class-pin",
         createdAt: serverTimestamp()
       });
     } else {
-      const credential = await signInWithEmailAndPassword(auth, email, password);
+      const credential = await signInWithEmailAndPassword(auth, authEmail, pin);
       const profile = await getDoc(doc(db, "studentProfiles", credential.user.uid));
       if (!profile.exists()) {
         await signOut(auth);
-        throw new Error("لم نعثر على ملف التلميذ. يرجى إنشاء حساب جديد أو التواصل مع الأستاذ.");
+        throw new Error("لم نعثر على ملف التلميذ. تحقق من الاسم والقسم والرمز السري.");
       }
-      name = profile.data().name;
-      studentClass = profile.data().studentClass;
+      const profileData = profile.data();
+      if (profileData.name !== name || profileData.studentClass !== studentClass) {
+        await signOut(auth);
+        throw new Error("الاسم أو القسم أو الرمز السري غير صحيح.");
+      }
+      name = profileData.name;
+      studentClass = profileData.studentClass;
     }
 
     await beginStudentExam();
   } catch (error) {
     console.error("Student account error:", error);
     const messages = {
-      "auth/email-already-in-use": "هذا البريد الإلكتروني مسجل من قبل. اختر تسجيل الدخول.",
-      "auth/invalid-email": "البريد الإلكتروني غير صحيح.",
-      "auth/weak-password": "كلمة المرور ضعيفة. استخدم 6 أحرف على الأقل.",
-      "auth/invalid-credential": "البريد الإلكتروني أو كلمة المرور غير صحيحة.",
-      "auth/user-not-found": "لا يوجد حساب بهذا البريد الإلكتروني.",
-      "auth/wrong-password": "كلمة المرور غير صحيحة.",
+      "auth/email-already-in-use": "يوجد ملف بهذه البيانات والرمز السري. اختر تسجيل الدخول.",
+      "auth/weak-password": "الرمز السري غير مقبول. استخدم 6 أرقام.",
+      "auth/invalid-credential": "الاسم أو القسم أو الرمز السري غير صحيح.",
+      "auth/user-not-found": "لم يتم العثور على ملف بهذه البيانات. اختر إنشاء حساب جديد إذا كانت هذه أول مرة.",
+      "auth/wrong-password": "الرمز السري غير صحيح.",
       "auth/network-request-failed": "تحقق من اتصال الإنترنت ثم حاول مجدداً.",
-      "permission-denied": "تعذر حفظ بيانات الحساب. تحقق من صلاحيات قاعدة البيانات."
+      "permission-denied": "تعذر حفظ ملفك. تحقق من اتصال الإنترنت وصلاحيات قاعدة البيانات."
     };
     notice(messages[error.code] || error.message || "تعذر إتمام العملية.");
   } finally {
     $("authSubmitBtn").disabled = false;
-  }
-};
-
-$("forgotPasswordBtn").onclick = async () => {
-  const email = $("studentEmail").value.trim().toLowerCase();
-  if (!email) {
-    notice("اكتب بريدك الإلكتروني أولاً لإرسال رابط استعادة كلمة المرور.");
-    return;
-  }
-  try {
-    await sendPasswordResetEmail(auth, email);
-    notice("إذا كان البريد مسجلاً، فسيصلك رابط إعادة تعيين كلمة المرور. تحقق أيضاً من البريد غير المرغوب فيه.");
-  } catch (error) {
-    const messages = {
-      "auth/invalid-email": "البريد الإلكتروني غير صحيح.",
-      "auth/user-not-found": "لا يوجد حساب بهذا البريد الإلكتروني.",
-      "auth/network-request-failed": "تحقق من اتصال الإنترنت ثم حاول مجدداً."
-    };
-    notice(messages[error.code] || "تعذر إرسال رابط الاستعادة حالياً.");
   }
 };
 
