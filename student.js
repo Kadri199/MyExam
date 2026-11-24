@@ -437,7 +437,27 @@ async function openStudentProfile() {
       </div>
       <h3>📚 سجل الاختبارات</h3>
       ${resultHtml}
+      <div id="profileExamNotice" class="notice hidden" role="alert" aria-live="polite" style="margin:16px 0;"></div>
+      <button id="profileStartExamBtn" class="primary start-button" type="button" style="width:100%;margin-top:18px;">
+        📝 بدء الاختبار الحالي من ملفي الشخصي ←
+      </button>
     `;
+
+    $("profileStartExamBtn").onclick = async () => {
+      const button = $("profileStartExamBtn");
+      const message = $("profileExamNotice");
+      button.disabled = true;
+      message.classList.add("hidden");
+      try {
+        await beginStudentExam();
+      } catch (error) {
+        console.error("Profile exam start error:", error);
+        message.textContent = error.message || "تعذر بدء الاختبار. حاول مجدداً.";
+        message.classList.remove("hidden");
+      } finally {
+        button.disabled = false;
+      }
+    };
   } catch (error) {
     console.error("Student profile error:", error);
     $("studentProfileContent").innerHTML = '<p>تعذر تحميل ملفك الشخصي. حاول مجدداً.</p>';
