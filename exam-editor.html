@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kadri_Class — إعدادات الاختبار</title>
+<link rel="stylesheet" href="style.css">
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#173b67">
+<script defer src="https://cdn.jsdelivr.net/npm/mathlive"></script>
+</head>
+<body>
+<header class="top">
+  <div class="brand"><img class="brand-avatar" src="./einstein-avatar.png" alt="Einstein"><span>Kadri_Class — إعدادات الاختبار</span></div>
+  <a href="admin.html" class="teacher-link">العودة إلى لوحة الأستاذ</a>
+</header>
+<main class="wrap wide">
+  <section class="hero">
+    <span class="eyebrow">إدارة الاختبارات</span>
+    <h1>إعدادات الاختبار وتحرير الأسئلة</h1>
+    <p>يتم حفظ تعديلاتك تلقائياً أثناء العمل، ويمكنك تنفيذ حفظ نهائي من أسفل الصفحة.</p>
+  </section>
+  <section id="editorLoginMessage" class="panel hidden">
+    <h2>يجب تسجيل الدخول أولاً</h2>
+    <p>سجّل الدخول بحساب الأستاذ من لوحة التحكم، ثم افتح هذه الصفحة مجدداً.</p>
+    <a href="admin.html" class="primary" style="display:inline-block;text-decoration:none;padding:12px 18px;border-radius:8px;">الذهاب إلى لوحة الأستاذ</a>
+  </section>
+  <div id="examEditorApp" class="hidden">
+    <section class="panel">
+      <div class="toolbar"><div><h2>الاختبارات</h2><p class="muted small">اختر الاختبار الذي تريد تعديله أو أضف اختباراً جديداً.</p></div><a href="admin.html" class="secondary" style="text-decoration:none;padding:10px 14px;border-radius:8px;">لوحة الأستاذ</a></div>
+      <div id="testManager"></div>
+    </section>
+    <section class="panel">
+      <h2 id="currentTestTitle">تحرير الاختبار</h2>
+      <label for="testTitle">اسم الاختبار</label>
+      <input id="testTitle" maxlength="100" type="text">
+      <div class="grid">
+        <div><label for="testStartAt">تاريخ ووقت بداية الاختبار</label><input id="testStartAt" type="datetime-local"></div>
+        <div><label for="testEndAt">تاريخ ووقت نهاية الاختبار</label><input id="testEndAt" type="datetime-local"></div>
+      </div>
+      <p class="muted small">يُسمح للتلميذ الذي بدأ الاختبار قبل وقت النهاية بإرسال إجاباته حتى بعد انتهاء الموعد.</p>
+    </section>
+    <div id="editor"></div>
+    <section class="panel" style="position:sticky;bottom:8px;z-index:5;box-shadow:0 4px 20px rgba(0,0,0,.12);">
+      <div class="toolbar" style="align-items:center;">
+        <div><strong>حفظ التعديلات</strong><p id="saveStatus" class="muted small" aria-live="polite" style="margin:5px 0 0;">لم يتم إجراء أي تعديل بعد.</p></div>
+        <button id="saveQuizBtn" class="primary" type="button">حفظ نهائي</button>
+      </div>
+    </section>
+  </div>
+  <div id="notice" class="notice hidden"></div>
+</main>
+<footer>Kadri_Class — منصة الاختبارات المدرسية</footer>
+<script type="module" src="exam-editor.js"></script>
+</body>
+</html>
