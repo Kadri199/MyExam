@@ -764,6 +764,8 @@ function render() {
           <span class="qtype">— السؤال التطبيقي (4 نقاط)</span>
         </p>
 
+        ${q.imageUrl ? `<img src="${esc(q.imageUrl)}" alt="رسم التمرين الهندسي" style="display:block;width:100%;max-width:760px;height:auto;margin:14px auto;border:1px solid #dbe3ee;border-radius:10px;">` : ""}
+
         <div class="filebox">
           <label>اختر صورة واضحة للحل الكامل
             <input type="file" id="answerFile"
