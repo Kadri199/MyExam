@@ -175,25 +175,9 @@ async function loadResults() {
 
     submissions = snap.docs.map(d => ({id:d.id,...d.data(),testId:d.data().testId||"wazifa2",testName:d.data().testName||"وظيفة 2"}));
 
-    // Keep the student-facing public ranking based on MCQ /16,
-    // and also publish the handwritten mark for the final /20.
-    await Promise.all(
-      submissions.map(student =>
-        setDoc(
-          doc(db, "publicRankings", student.id),
-          {
-            name: student.name,
-            studentClass: student.studentClass,
-            score: student.score,
-            handwrittenMark: student.handwrittenMark ?? null,
-            studentUid: student.studentUid || student.id,
-            testId: student.testId || "wazifa2",
-            testName: student.testName || "وظيفة 2"
-          },
-          { merge: true }
-        )
-      )
-    );
+    // Do not recreate public ranking documents while merely loading results.
+    // Rankings are created at student submission and updated only when the
+    // teacher changes a handwritten mark. This keeps intentional deletions intact.
 
     createClassFilters();
     renderClassRanking();
