@@ -1,11 +1,12 @@
 
-const CACHE_NAME = "my-exam-v2";
+const CACHE_NAME = "my-exam-v3";
 
 const FILES_TO_CACHE = [
   "./",
   "./index.html",
   "./admin.html",
   "./style.css",
+  "./einstein-avatar.png",
   "./student.js",
   "./admin.js",
   "./exam-bank.js",
