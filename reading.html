@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#2563eb">
+<title>عالم القراءة — Kadri_Class</title>
+<link rel="stylesheet" href="./style.css">
+<style>
+.reading-wrap{max-width:1000px;margin:28px auto;padding:0 16px}
+.reading-intro{background:linear-gradient(125deg,#102b50,#2563eb);color:#fff;border-radius:20px;padding:26px;text-align:center}
+.reading-intro h1{margin:5px 0;font-size:clamp(25px,5vw,36px)}
+.reading-intro p{color:#dbeafe;margin:4px 0}
+.story-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin:20px 0}
+.story-card{background:#fff;border:1px solid #e2eaf5;border-radius:16px;overflow:hidden;box-shadow:0 6px 20px rgba(20,43,74,.05)}
+.story-card img{width:100%;height:185px;object-fit:cover;display:block}
+.story-card-body{padding:16px}
+.story-card h2{font-size:19px;margin:3px 0;color:#102b50}
+.story-card p{color:#718096;margin:5px 0 13px;font-size:13px}
+.story-tag{font-size:11px;font-weight:800;color:#2563eb}
+.story-read{width:100%;background:#2563eb;color:#fff}
+.story-content{background:#fff;border:1px solid #e2eaf5;border-radius:18px;padding:clamp(18px,4vw,32px);margin:22px 0;box-shadow:0 7px 25px rgba(20,43,74,.05)}
+.story-content[hidden]{display:none}
+.story-content h2{color:#102b50;margin-top:0}
+.story-content p{font-size:17px;line-height:2.15;margin:12px 0}
+.story-content img{width:100%;max-height:300px;object-fit:cover;border-radius:14px;margin-bottom:16px}
+.story-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}
+.story-actions button{flex:1;min-width:130px}
+.back-home{display:inline-block;margin:16px 0;font-weight:800}
+@media(max-width:650px){.story-grid{grid-template-columns:1fr}.story-card img{height:200px}.story-content p{font-size:16px}}
+</style>
+</head>
+<body>
+<header class="top">
+  <a href="./index.html" class="brand"><img class="brand-avatar" src="./einstein-avatar.png" alt="Einstein"><span>Kadri_Class</span></a>
+  <a href="./index.html" class="teacher-link">الصفحة الرئيسية ←</a>
+</header>
+<main class="reading-wrap">
+  <section class="reading-intro">
+    <div style="font-size:2.2rem;">📚 ✨</div>
+    <h1>عالم القراءة</h1>
+    <p>خذ استراحة، واختر قصة، ودع خيالك ينطلق!</p>
+  </section>
+
+  <section class="story-grid" aria-label="القصص المتاحة">
+    <article class="story-card">
+      <img src="https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=900&q=80" alt="غابة خضراء وأشعة الشمس" loading="lazy">
+      <div class="story-card-body"><span class="story-tag">🌱 قصة تربوية</span><h2>الشجرة التي عادت للحياة</h2><p>عن التعاون والمحافظة على البيئة — 3 دقائق</p><button class="story-read" type="button" data-story="values">اقرأ القصة ←</button></div>
+    </article>
+    <article class="story-card">
+      <img src="https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?auto=format&fit=crop&w=900&q=80" alt="كوكب الأرض من الفضاء" loading="lazy">
+      <div class="story-card-body"><span class="story-tag">🔬 قصة علمية</span><h2>رحلة إلى الكوكب الأزرق</h2><p>عن الأرض وأسرارها — 3 دقائق</p><button class="story-read" type="button" data-story="science">اقرأ القصة ←</button></div>
+    </article>
+    <article class="story-card">
+      <img src="https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&w=900&q=80" alt="وادي جبلي بين الجبال" loading="lazy">
+      <div class="story-card-body"><span class="story-tag">🧭 قصة مغامرات</span><h2>سرّ الخريطة القديمة</h2><p>لغز ينتظر من يكتشفه — 4 دقائق</p><button class="story-read" type="button" data-story="adventure">اقرأ القصة ←</button></div>
+    </article>
+    <article class="story-card">
+      <img src="https://images.unsplash.com/photo-1509228468518-180dd4864904?auto=format&fit=crop&w=900&q=80" alt="أرقام وأدوات حسابية على دفتر" loading="lazy">
+      <div class="story-card-body"><span class="story-tag">➗ قصة رياضية</span><h2>لغز برج الساعات</h2><p>مغامرة بالأرقام والتفكير — 4 دقائق</p><button class="story-read" type="button" data-story="math">اقرأ القصة ←</button></div>
+    </article>
+  </section>
+
+  <article id="story-values" class="story-content" hidden>
+    <img src="https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=1000&q=80" alt="غابة خضراء" loading="lazy">
+    <span class="story-tag">🌱 قصة تربوية</span><h2>الشجرة التي عادت للحياة</h2>
+    <p>في ساحة مدرسة صغيرة، كانت تقف شجرة زيتون قديمة. اعتاد التلاميذ الجلوس تحت ظلها، لكنهم لاحظوا ذات صباح أن أوراقها بدأت تصفرّ وأن أغصانها جفّت.</p>
+    <p>قال سامي: «ربما تحتاج إلى الماء». فردّت ليلى: «لكننا نسقيها أحياناً، لعلّ تربتها مليئة بالأوساخ». اقترح الأستاذ أن يعمل الجميع معاً: جمع بعضهم النفايات، ونظّف آخرون التربة، وصنع فريق صغير حاجزاً يحمي جذع الشجرة من العبث.</p>
+    <p>كل يوم، كان تلميذ يتولى سقيها بكمية مناسبة. وبعد أسابيع، ظهرت براعم خضراء صغيرة. فرح الجميع، وقال الأستاذ: «لم ينقذ الشجرة شخص واحد، بل تعاونتم جميعاً».</p>
+    <p>ومنذ ذلك اليوم، أصبحت الشجرة رمزاً لقسمهم، وتعلّموا أن العمل الجماعي، مهما بدا بسيطاً، يصنع فرقاً كبيراً.</p>
+    <div class="story-actions"><button class="secondary" type="button" data-back>العودة إلى القصص</button></div>
+  </article>
+
+  <article id="story-science" class="story-content" hidden>
+    <img src="https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?auto=format&fit=crop&w=1000&q=80" alt="الأرض من الفضاء" loading="lazy">
+    <span class="story-tag">🔬 قصة علمية</span><h2>رحلة إلى الكوكب الأزرق</h2>
+    <p>في ليلة صافية، نظر أمين إلى السماء وسأل جدّه: «لماذا يسمّون الأرض بالكوكب الأزرق؟». ابتسم الجد وقال: «لأن الماء يغطي معظم سطحها، وعندما ننظر إليها من الفضاء تبدو زرقاء جميلة».</p>
+    <p>تخيّل أمين أنه ركب مركبة فضائية. ابتعد عن الأرض فرأى المحيطات الواسعة، والقارات، والسحب البيضاء التي تتحرك فوقها. ثم تذكّر درس العلوم: يتبخر جزء من ماء البحار بفعل حرارة الشمس، ثم يتكاثف بخار الماء في السحب، وبعدها يعود إلى الأرض مطراً.</p>
+    <p>قال أمين: «إذن الماء يدور في رحلة لا تتوقف!». أجابه الجد: «نعم، وهذه تسمّى دورة الماء في الطبيعة. ولهذا يجب أن نحافظ عليه، فهو أساس الحياة».</p>
+    <p>في الصباح، أغلق أمين صنبور الماء جيداً، وقرّر ألا يترك الماء يضيع دون فائدة. فقد فهم أن حماية كوكبنا تبدأ من تصرف صغير.</p>
+    <div class="story-actions"><button class="secondary" type="button" data-back>العودة إلى القصص</button></div>
+  </article>
+
+  <article id="story-adventure" class="story-content" hidden>
+    <img src="https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&w=1000&q=80" alt="جبال ووادي" loading="lazy">
+    <span class="story-tag">🧭 قصة مغامرات</span><h2>سرّ الخريطة القديمة</h2>
+    <p>بينما كان ياسين يساعد جدّه في ترتيب العلّية، وجد صندوقاً خشبياً صغيراً. فتحه بحذر، فوجد خريطة صفراء مرسوماً عليها جبل ونهر وثلاث علامات غريبة.</p>
+    <p>استدعى صديقته مريم، وبدآ يحاولان فهم الرموز. لاحظت مريم أن العلامة الأولى تشبه شجرة كبيرة قرب الطريق، والثانية تشبه جسراً قديماً. أما العلامة الأخيرة فكانت نجمة بجانب تلّ صغير.</p>
+    <p>في اليوم التالي، ذهبا مع جدّ ياسين في نزهة إلى المكان، ولم يبتعدوا عن الطريق الآمن. عند الشجرة وجدا حجراً عليه سهم، وعند الجسر اكتشفوا نقشاً قديماً. قادهما السهم إلى التلّ، حيث عثرا على علبة معدنية صغيرة.</p>
+    <p>فتحها الجد، فوجدوا بداخلها رسالة كتبها جدّه قبل سنوات: «الكنز الحقيقي هو الذكريات الجميلة التي نصنعها مع من نحب». ضحك الأطفال، فقد كانت مغامرتهم نفسها أثمن من أي كنز.</p>
+    <div class="story-actions"><button class="secondary" type="button" data-back>العودة إلى القصص</button></div>
+  </article>
+
+  <article id="story-math" class="story-content" hidden>
+    <img src="https://images.unsplash.com/photo-1509228468518-180dd4864904?auto=format&fit=crop&w=1000&q=80" alt="دفتر وأرقام وأدوات حسابية" loading="lazy">
+    <span class="story-tag">➗ قصة رياضية</span><h2>لغز برج الساعات</h2>
+    <p>وصلت نور وصديقها آدم إلى برج قديم في وسط المدينة. كان باب البرج مغلقاً، وفوقه لوحة تقول: «لن يُفتح الباب إلا لمن يفهم لغة الأرقام».</p>
+    <p>وجد الطفلان ثلاثة أقراص صغيرة. على الأول كُتب: «نصف العدد 24». قالت نور: «الناتج 12». وعلى الثاني: «ثلاثة أرباع العدد 20». أجاب آدم: «15». أضاء القرصان، لكن الباب بقي مغلقاً.</p>
+    <p>ظهرت رسالة أخيرة: «إذا كانت الساعة تشير إلى الثامنة، فكم تصبح بعد 135 دقيقة؟». فكّر آدم: 120 دقيقة تساوي ساعتين، وتبقى 15 دقيقة. قالت نور: «تصبح العاشرة والربع!». وما إن أدخلا الإجابة حتى انفتح الباب.</p>
+    <p>في الداخل لم يجدا ذهباً ولا مجوهرات، بل مكتبة مليئة بالكتب والألعاب الذهنية. قالت نور: «الرياضيات ليست أرقاماً على الورق فقط، إنها مفتاح لفهم العالم وحلّ الألغاز!».</p>
+    <div class="story-actions"><button class="secondary" type="button" data-back>العودة إلى القصص</button></div>
+  </article>
+  <a class="back-home" href="./index.html">← العودة إلى الصفحة الرئيسية</a>
+</main>
+<footer><strong>Kadri_Class</strong><p>منصة تعليمية للاختبارات المدرسية</p></footer>
+<script>
+const cards=document.querySelectorAll("[data-story]");
+const stories=document.querySelectorAll(".story-content");
+function showStory(id){
+  stories.forEach(s=>s.hidden=s.id!=="story-"+id);
+  document.querySelector(".story-grid").hidden=true;
+  document.querySelector(".reading-intro").hidden=true;
+  document.getElementById("story-"+id).scrollIntoView({behavior:"smooth",block:"start"});
+}
+function showList(){
+  stories.forEach(s=>s.hidden=true);
+  document.querySelector(".story-grid").hidden=false;
+  document.querySelector(".reading-intro").hidden=false;
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+cards.forEach(btn=>btn.addEventListener("click",()=>showStory(btn.dataset.story)));
+document.querySelectorAll("[data-back]").forEach(btn=>btn.addEventListener("click",showList));
+</script>
+</body>
+</html>
