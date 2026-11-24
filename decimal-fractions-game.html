@@ -74,11 +74,11 @@ const types=["حوّل الكسر إلى عدد عشري","حوّل العدد �
 const rand=n=>Math.floor(Math.random()*n),pick=a=>a[rand(a.length)];
 function makeDecimal(){const digits=1+rand(3),den=10**digits,num=1+rand(den-1);return {num,den,digits,text:(num/den).toFixed(digits)}}
 function frac(n,d){return n+"/"+d}
-function uniqueOptions(correctValue,others){const out=[String(correctValue)];for(const x of others){const s=String(x);if(!out.includes(s))out.push(s)}while(out.length<4){const x=String(Number(correctValue)+pick([-0.3,-0.2,-0.1,0.1,0.2,0.3]));if(!out.includes(x))out.push(x)}return out.sort(()=>Math.random()-.5)}
+function uniqueOptions(correctValue,others){const out=[String(correctValue)];for(const x of others){const s=String(x);if(!out.includes(s)&&out.length<4)out.push(s)}let n=1;while(out.length<4){const s="0."+String(n++).padStart(3,"0");if(!out.includes(s))out.push(s)}return out.sort(()=>Math.random()-.5)}
 function makeQuestion(){
  const kind=rand(5);let prompt="",question="",answer="",opts=[];
  if(kind===0){const x=makeDecimal();prompt="ما الكتابة العشرية للكسر؟";question=frac(x.num,x.den);answer=x.text;opts=uniqueOptions(answer,[ (x.num/x.den+0.1).toFixed(x.digits),Math.max(0,x.num/x.den-0.1).toFixed(x.digits),(x.num/x.den+0.2).toFixed(x.digits)]);}
- if(kind===1){const x=makeDecimal();prompt="اكتب العدد العشري على شكل كسر عشري.";question=x.text;answer=frac(x.num,x.den);opts=uniqueOptions(answer,[frac(x.num*10,x.den*10),frac(Math.max(1,x.num-1),x.den),frac(x.num,x.den*10)]);}
+ if(kind===1){const x=makeDecimal();prompt="اكتب العدد العشري على شكل كسر عشري.";question=x.text;answer=frac(x.num,x.den);opts=uniqueOptions(answer,[frac(x.num+1,x.den),frac(Math.max(1,x.num-1),x.den),frac(x.num,x.den*10)]);}
  if(kind===2){const x=makeDecimal(),factor=pick([10,100]);prompt="أي كسر يساوي هذا الكسر؟";question=frac(x.num,x.den);answer=frac(x.num*factor,x.den*factor);opts=uniqueOptions(answer,[frac(x.num+1,x.den),frac(x.num*factor,x.den),frac(x.num,x.den*factor)]);}
  if(kind===3){const x=makeDecimal(),y=makeDecimal();prompt="اختر العلاقة الصحيحة بين العددين.";question=x.text+"  ؟  "+y.text;answer=x.num/x.den>y.num/y.den?">":x.num/x.den<y.num/y.den?"<":"=";opts=[">","<","=","≠"].sort(()=>Math.random()-.5);}
  if(kind===4){let vals=[makeDecimal(),makeDecimal(),makeDecimal()];while(new Set(vals.map(v=>v.text)).size<3)vals=[makeDecimal(),makeDecimal(),makeDecimal()];const sorted=[...vals].sort((a,b)=>a.num/a.den-b.num/b.den);prompt="اختر الترتيب من الأصغر إلى الأكبر.";question=vals.map(v=>v.text).join(" ، ");answer=sorted.map(v=>v.text).join(" < ");opts=uniqueOptions(answer,[vals.map(v=>v.text).join(" < "),[...sorted].reverse().map(v=>v.text).join(" < "),[vals[1],vals[2],vals[0]].map(v=>v.text).join(" < ")]);}
