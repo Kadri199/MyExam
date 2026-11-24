@@ -123,28 +123,30 @@
       <button id="registerModeBtn" type="button" class="secondary">إنشاء حساب جديد</button>
     </div>
 
-    <label for="studentName">الاسم واللقب الكامل <span class="muted small">( اكتب اسمك بحذر )</span></label>
-    <input id="studentName" maxlength="100" placeholder="اكتب اسمك ولقبك كما في القسم" autocomplete="name">
+    <div id="studentAuthForm" class="hidden">
+      <label for="studentName">الاسم واللقب الكامل <span class="muted small">( اكتب اسمك بحذر )</span></label>
+      <input id="studentName" maxlength="100" placeholder="اكتب اسمك ولقبك كما في القسم" autocomplete="name">
 
-    <label for="studentClass">اختر قسمك</label>
-    <select id="studentClass" required>
-      <option value="">-- اختر القسم --</option>
-      <option value="Class 9">1م9</option>
-      <option value="Class 10">1م10</option>
-      <option value="Class 11">1م11</option>
-      <option value="Class 12">1م12</option>
-    </select>
+      <label for="studentClass">اختر قسمك</label>
+      <select id="studentClass" required>
+        <option value="">-- اختر القسم --</option>
+        <option value="Class 9">1م9</option>
+        <option value="Class 10">1م10</option>
+        <option value="Class 11">1م11</option>
+        <option value="Class 12">1م12</option>
+      </select>
 
-    <label for="studentPin">الرمز السري (6 أرقام)</label>
-    <input id="studentPin" type="password" inputmode="numeric" pattern="[0-9]{6}" minlength="6" maxlength="6" placeholder="أدخل رمزك السري المكوّن من 6 أرقام" autocomplete="new-password">
+      <label for="studentPin">الرمز السري (6 أرقام)</label>
+      <input id="studentPin" type="password" inputmode="numeric" pattern="[0-9]{6}" minlength="6" maxlength="6" placeholder="أدخل رمزك السري المكوّن من 6 أرقام" autocomplete="new-password">
 
-    <p class="muted small" style="background:#fff8e6;padding:12px;border-radius:8px;line-height:1.8;">
-      ⚠️ احفظ هذا الرمز جيداً ولا تشاركه مع أي شخص. ستحتاج إليه في كل مرة للدخول إلى حسابك.
-    </p>
+      <p class="muted small" style="background:#fff8e6;padding:12px;border-radius:8px;line-height:1.8;">
+        ⚠️ احفظ هذا الرمز جيداً ولا تشاركه مع أي شخص. ستحتاج إليه في كل مرة للدخول إلى حسابك.
+      </p>
 
-    <button id="authSubmitBtn" class="primary start-button" type="button">
-      إنشاء الملف وبدء الاختبار <span>←</span>
-    </button>
+      <button id="authSubmitBtn" class="primary start-button" type="button">
+        إنشاء الملف وبدء الاختبار <span>←</span>
+      </button>
+    </div>
 
     <p class="muted small exam-note">
       يتكون الاختبار من 16 سؤال اختيار من متعدد وسؤال تطبيقي واحد.
