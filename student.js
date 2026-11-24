@@ -27,6 +27,7 @@ let activeTestId="wazifa2", activeTestName="وظيفة 2";
 
 // Public ranking real-time listener
 let rankingUnsubscribe = null;
+let rankingSelectedClass = null;
 
 const classes = ["Class 9", "Class 10", "Class 11", "Class 12"];
 
@@ -277,7 +278,7 @@ $("showRankingBtn").onclick = async () => {
   `;
   const testSelect = $("rankingTestSelect");
   if (testSelect) testSelect.onchange = () => {
-    const chosen = document.querySelector(".ranking-class-btn[data-selected='true']");
+    const chosen = [...document.querySelectorAll(".ranking-class-btn")].find(b => b.dataset.class === rankingSelectedClass);
     if (chosen) chosen.click();
     else $("rankingResults").innerHTML = '<p class="muted small">اختر القسم لعرض الترتيب.</p>';
   };
@@ -290,6 +291,7 @@ $("rankingClasses").onclick = event => {
   if (!button) return;
 
   const selectedClass = button.dataset.class;
+  rankingSelectedClass = selectedClass;
   const selectedTest = $("rankingTestSelect")?.value || "wazifa2";
 
   if (!classes.includes(selectedClass)) return;
