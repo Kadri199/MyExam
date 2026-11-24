@@ -1,9 +1,10 @@
 
-const CACHE_NAME = "my-exam-v20";
+const CACHE_NAME = "my-exam-v21";
 
 const FILES_TO_CACHE = [
   "./",
   "./index.html",
+  "./reading.html",
   "./multiplication-game.html",
   "./decimal-fractions-game.html",
   "./admin.html",
