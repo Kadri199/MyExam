@@ -28,17 +28,17 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
-    match /settings/quiz {
-      allow read: if true;
-      allow write: if isTeacher();
-    }
+    match /settings/quiz { allow read: if true; allow write: if isTeacher(); }
+    match /settings/exams { allow read: if true; allow write: if isTeacher(); }
+    match /examTests/{testId} { allow read: if true; allow create, update, delete: if isTeacher(); }
 
     match /submissions/{submissionId} {
 
-      // One submission per registered pupil account.
       allow create: if isStudent()
-        && submissionId == request.auth.uid
         && request.resource.data.studentUid == request.auth.uid
+        && request.resource.data.testId is string
+        && request.resource.data.testName is string
+        && submissionId == request.auth.uid + "__" + request.resource.data.testId
         && request.resource.data.name is string
         && request.resource.data.name.size() >= 3
         && request.resource.data.name.size() <= 100
@@ -80,13 +80,14 @@ service cloud.firestore {
       allow create: if isTeacher() ||
         (
           isStudent()
-          && rankingId == request.auth.uid
+          && rankingId == request.resource.data.studentUid + "__" + request.resource.data.testId
           && exists(
             /databases/$(database)/documents/submissions/$(rankingId)
           )
           && get(
             /databases/$(database)/documents/submissions/$(rankingId)
           ).data.studentUid == request.auth.uid
+          && request.resource.data.testId == get(/databases/$(database)/documents/submissions/$(rankingId)).data.testId
           && request.resource.data.name ==
             get(/databases/$(database)/documents/submissions/$(rankingId)).data.name
           && request.resource.data.studentClass ==
