@@ -55,6 +55,13 @@ function sortClassResults(results) {
 }
 
 // Assign equal ranks to pupils with equal marks.
+function getAwardBadge(rank) {
+  if (rank === 1) return '<span class="rank-medal gold">🥇 ذهبية</span>';
+  if (rank === 2) return '<span class="rank-medal silver">🥈 فضية</span>';
+  if (rank === 3) return '<span class="rank-medal bronze">🥉 برونزية</span>';
+  return "";
+}
+
 function getRankedResults(results) {
   const sorted = sortClassResults(results);
 
@@ -412,7 +419,7 @@ function renderClassRanking() {
 
         return `
           <tr>
-            <td class="rank">${s.rank}</td>
+            <td class="rank">${s.rank} ${s.handwrittenMark == null ? "" : getAwardBadge(s.rank)}</td>
             <td>${esc(s.name)}</td>
             <td><b>${s.score ?? "—"}</b></td>
 
