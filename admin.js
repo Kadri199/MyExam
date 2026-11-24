@@ -127,19 +127,6 @@ async function loadTests(){
  await setDoc(metaRef,{activeTestId:meta.activeTestId,tests:tests.map(t=>({id:t.id,title:t.title}))},{merge:true});
  selectedTestId=meta.activeTestId;
 }
-async function loadQuiz(){
- const snap=await getDoc(doc(db,"examTests",selectedTestId));if(!snap.exists())throw Error("الاختبار غير موجود");
- quiz=snap.data();const img=quiz.imageQuestions?.[0];quiz.imageQuestions=[{q:img?.q||"السؤال 17 — الحل الكامل"}];
- $("testStartAt").value=toLocalDateTimeInput(quiz.startAt||Date.now());$("testEndAt").value=toLocalDateTimeInput(quiz.endAt||Date.now());
- $("currentTestTitle").textContent=quiz.title||"اختبار جديد";renderEditor();
-}
-function renderTestManager(activeId){
- $("testManager").innerHTML=`<h3>الاختبارات</h3><div style="display:flex;flex-wrap:wrap;gap:8px;margin:12px 0">${tests.map(t=>`<button type="button" data-test="${esc(t.id)}" class="${t.id===selectedTestId?"primary":"secondary"}">${esc(t.title)} ${t.id===activeId?"— منشور":""}</button>`).join("")}<button id="addTestBtn" class="secondary" type="button">＋ إضافة اختبار</button></div><button id="publishTestBtn" class="primary" type="button">نشر الاختبار المحدد</button>`;
- document.querySelectorAll("[data-test]").forEach(b=>b.onclick=async()=>{selectedTestId=b.dataset.test;await loadQuiz();renderTestManager(activeId);});
- $("addTestBtn").onclick=async()=>{const title=prompt("اسم الاختبار الجديد");if(!title?.trim())return;const id="test_"+Date.now();const item={title:title.trim(),startAt:Date.now(),endAt:new Date("2026-11-24T23:59:00+01:00").getTime(),mcq:Array.from({length:16},(_,i)=>({q:`السؤال ${i+1}`,options:["الخيار الأول","الخيار الثاني","الخيار الثالث"],correct:0})),imageQuestions:[{q:"السؤال 17 — الحل الكامل"}]};await setDoc(doc(db,"examTests",id),item);tests.push({id,...item});selectedTestId=id;await setDoc(doc(db,"settings","exams"),{tests:tests.map(t=>({id:t.id,title:t.title}))},{merge:true});await loadQuiz();renderTestManager(activeId);};
- $("publishTestBtn").onclick=async()=>{await setDoc(doc(db,"settings","exams"),{activeTestId:selectedTestId,tests:tests.map(t=>({id:t.id,title:t.title}))},{merge:true});renderTestManager(selectedTestId);notice("تم نشر الاختبار للتلاميذ.");};
-}
-
 $("refreshBtn").onclick = loadResults;
 
 function createClassFilters() {
