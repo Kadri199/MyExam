@@ -125,7 +125,30 @@ function stopRankingListener() {
   if (rankingUnsubscribe) {
     rankingUnsubscribe();
     rankingUnsubscribe = null;
+  } 
+}
+function getFinalScore(student) {
+  const manual = student.handwrittenMark;
+
+  if (manual === null || manual === undefined || manual === "") {
+    return null;
   }
+
+  return Number(student.score || 0) + Number(manual);
+}
+
+function sortByFinalScore(a, b) {
+  const finalA = getFinalScore(a);
+  const finalB = getFinalScore(b);
+
+  if (finalA === null && finalB !== null) return 1;
+  if (finalA !== null && finalB === null) return -1;
+
+  if (finalA !== finalB) {
+    return (finalB ?? 0) - (finalA ?? 0);
+  }
+
+  return Number(b.score || 0) - Number(a.score || 0);
 }
 
 // Render public ranking.
