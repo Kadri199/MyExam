@@ -20,7 +20,7 @@ const auth = getAuth(app);
 const $ = id => document.getElementById(id);
 
 let quiz, name = "", studentClass = "", page = 0;
-let authMode = "register";
+let authMode = "login";
 let answers = {};
 let answerFile = null;
 let activeTestId="wazifa2", activeTestName="وظيفة 2";
