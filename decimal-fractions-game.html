@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#2563eb">
 <title>سباق الكسور العشرية | Kadri_Class</title>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
 <style>
 *{box-sizing:border-box}body{margin:0;min-height:100vh;background:linear-gradient(145deg,#eff6ff,#f0fdf4);font-family:Tahoma,Arial,sans-serif;color:#172554}
 header{padding:18px max(18px,calc((100% - 940px)/2));display:flex;justify-content:space-between;align-items:center;background:#fff;gap:12px}header a{color:#2563eb;text-decoration:none;font-weight:bold}
@@ -74,6 +75,17 @@ const types=["حوّل الكسر إلى عدد عشري","حوّل العدد �
 const rand=n=>Math.floor(Math.random()*n),pick=a=>a[rand(a.length)];
 function makeDecimal(){const digits=1+rand(3),den=10**digits,num=1+rand(den-1);return {num,den,digits,text:(num/den).toFixed(digits)}}
 function frac(n,d){return n+"/"+d}
+function mathHtml(value){
+ const escapeHtml=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+ return String(value).split(/(\\d+\\s*\\/\\s*\\d+|\\d+\\.\\d+|[<>=≠])/g).map(part=>{
+  if(/^\\d+\\s*\\/\\s*\\d+$/.test(part)){const [n,d]=part.split("/").map(x=>x.trim());return "\\\\(\\\\frac{"+n+"}{"+d+"}\\\\)";}
+  if(/^\\d+\\.\\d+$/.test(part)||/^[<>=≠]$/.test(part))return "\\\\("+part+"\\\\)";
+  return escapeHtml(part);
+ }).join("");
+}
+function typesetMath(elements){
+ if(window.MathJax?.typesetPromise)window.MathJax.typesetPromise(elements).catch(err=>console.error("Math rendering error:",err));
+}
 function uniqueOptions(correctValue,others){const out=[String(correctValue)];for(const x of others){const s=String(x);if(!out.includes(s)&&out.length<4)out.push(s)}let n=1;while(out.length<4){const s="0."+String(n++).padStart(3,"0");if(!out.includes(s))out.push(s)}return out.sort(()=>Math.random()-.5)}
 function makeQuestion(){
  const kind=rand(5);let prompt="",question="",answer="",opts=[];
@@ -86,16 +98,16 @@ function makeQuestion(){
 }
 function renderQuestion(){
  locked=false;const q=makeQuestion();currentAnswer=q.answer;currentOptions=q.opts;
- $("type").textContent=types[q.kind];$("prompt").textContent=q.prompt;$("question").textContent=q.question;$("feedback").textContent="";
+ $("type").textContent=types[q.kind];$("prompt").textContent=q.prompt;$("question").innerHTML=mathHtml(q.question);$("feedback").textContent="";
  $("options").innerHTML="";
- q.opts.forEach(value=>{const btn=document.createElement("button");btn.type="button";btn.className="option";btn.textContent=value;btn.addEventListener("click",()=>choose(value,btn));$("options").appendChild(btn)});
+ q.opts.forEach(value=>{const btn=document.createElement("button");btn.type="button";btn.className="option";btn.dataset.answer=value;btn.innerHTML=mathHtml(value);btn.addEventListener("click",()=>choose(value,btn));$("options").appendChild(btn)});typesetMath([$("question"),$("options")]);
  $("count").textContent=questionNumber;$("score").textContent=score;$("distance").textContent=distance>=1000?(distance/1000).toFixed(distance%1000?1:0)+" كم":distance+" م";
  $("bar").style.width=(distance%1000)/10+"%";$("car").style.right=((distance%1000)/10)+"%";
 }
 function choose(value,btn){
- if(locked||finished)return;locked=true;const buttons=[...$("options").querySelectorAll("button")];buttons.forEach(b=>{b.disabled=true;if(b.textContent===currentAnswer)b.classList.add("correct")});
+ if(locked||finished)return;locked=true;const buttons=[...$("options").querySelectorAll("button")];buttons.forEach(b=>{b.disabled=true;if(b.dataset.answer===currentAnswer)b.classList.add("correct")});
  if(value===currentAnswer){correct++;score+=10;distance+=100;$("feedback").textContent="🚀 إجابة صحيحة! تقدّمت 100 متر +10 نقاط";$("feedback").style.color="#16a34a";$("count").textContent=questionNumber+1;$("score").textContent=score;$("distance").textContent=distance>=1000?(distance/1000).toFixed(distance%1000?1:0)+" كم":distance+" م";$("bar").style.width=(distance%1000)/10+"%";$("car").style.right=(distance%1000)/10+"%";questionNumber++;window.setTimeout(()=>{if(!finished)renderQuestion()},650);}
- else{btn.classList.add("wrong");$("feedback").textContent="ليست صحيحة! الإجابة الصحيحة: "+currentAnswer+" — حاول مجدداً 💪";$("feedback").style.color="#dc2626";window.setTimeout(()=>endGame("wrong"),1300);}
+ else{btn.classList.add("wrong");$("feedback").innerHTML=mathHtml("ليست صحيحة! الإجابة الصحيحة: "+currentAnswer+" — حاول مجدداً 💪");typesetMath([$("feedback")]);$("feedback").style.color="#dc2626";window.setTimeout(()=>endGame("wrong"),1300);}
 }
 function endGame(reason){if(finished)return;finished=true;$("play").classList.add("hidden");$("finish").classList.remove("hidden");$("finishTitle").textContent=reason==="wrong"?"انتهى السباق! لا تستسلم 💪":"أحسنت، أنهيت السباق! 🌟";$("finalText").textContent="أجبت إجابة صحيحة عن "+correct+" سؤالاً، وجمعت "+score+" نقطة، وقطعت مسافة "+(distance>=1000?(distance/1000).toFixed(1)+" كم":distance+" متراً")+"."; $("playerName").value="";$("saveStatus").textContent="";$("saveBtn").disabled=false;}
 $("leave").addEventListener("click",()=>endGame("leave"));
