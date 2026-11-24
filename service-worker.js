@@ -1,9 +1,9 @@
 
-const CACHE_NAME = "my-exam-v17";
+const CACHE_NAME = "my-exam-v18";
 
 const FILES_TO_CACHE = [
   "./",
-  "./index.html",
+  "./index.html",\n  "./multiplication-game.html",
   "./admin.html",
   "./exam-editor.html",
   "./style.css",
