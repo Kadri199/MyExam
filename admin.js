@@ -132,7 +132,7 @@ async function loadQuiz() {
 
   // Keep the existing question content; add the first test's title and schedule.
   const defaultEnd = new Date("2026-11-24T23:59:00+01:00").getTime();
-  const scheduleNeedsSave = !quiz.title || !quiz.startAt || !quiz.endAt;
+  const scheduleNeedsSave = quiz.title !== "وظيفة 2" || !quiz.startAt || !quiz.endAt;
   quiz.title = "وظيفة 2";
   if (!quiz.startAt) quiz.startAt = Date.now();
   if (!quiz.endAt) quiz.endAt = defaultEnd;
