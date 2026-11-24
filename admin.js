@@ -352,7 +352,8 @@ async function loadResults() {
       ...d.data()
     }));
 
-    // Keep the student-facing public ranking based on MCQ /16.
+    // Keep the student-facing public ranking based on MCQ /16,
+    // and also publish the handwritten mark for the final /20.
     await Promise.all(
       submissions.map(student =>
         setDoc(
@@ -360,7 +361,8 @@ async function loadResults() {
           {
             name: student.name,
             studentClass: student.studentClass,
-            score: student.score
+            score: student.score,
+            handwrittenMark: student.handwrittenMark ?? null
           },
           { merge: true }
         )
@@ -501,6 +503,14 @@ function renderClassRanking() {
 
           delete student.handwrittenMark;
 
+          // Also remove the handwritten mark from the public ranking.
+          await setDoc(doc(db, "publicRankings", id), {
+            name: student.name,
+            studentClass: student.studentClass,
+            score: student.score,
+            handwrittenMark: deleteField()
+          }, { merge: true });
+
           notice("تم حذف علامة الحلول الكتابية.");
 
           // Recalculate ranking after deleting the mark.
@@ -533,6 +543,14 @@ function renderClassRanking() {
         });
 
         student.handwrittenMark = n;
+
+        // Also publish the handwritten mark to the public ranking.
+        await setDoc(doc(db, "publicRankings", id), {
+          name: student.name,
+          studentClass: student.studentClass,
+          score: student.score,
+          handwrittenMark: n
+        }, { merge: true });
 
         notice("تم حفظ علامة الحلول الكتابية وتحديث الترتيب.");
 
