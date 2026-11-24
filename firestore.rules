@@ -1,38 +1,104 @@
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /settings/quiz {
-      allow read: if true;
-      allow write: if request.auth != null && request.auth.token.firebase.sign_in_provider == 'password';
-    }
-    match /submissions/{submissionId} {
-      allow create: if request.auth != null
-        && request.resource.data.keys().hasOnly(['name','answers','score','images','createdAt'])
-        && request.resource.data.name is string
-        && request.resource.data.name.size() >= 3
-        && request.resource.data.name.size() <= 100
-        && request.resource.data.score is int
-        && request.resource.data.score >= 0
-        && request.resource.data.score <= 16;
-      allow read, update, delete: if request.auth != null
+    function isTeacher() {
+      return request.auth != null
         && request.auth.token.firebase.sign_in_provider == 'password';
     }
 
+    function isStudent() {
+      return request.auth != null
+        && request.auth.token.firebase.sign_in_provider == 'anonymous';
+    }
+
+    match /settings/quiz {
+      allow read: if true;
+      allow write: if isTeacher();
+    }
+
+    match /submissions/{submissionId} {
+
+      // One submission per anonymous Firebase account.
+      allow create: if isStudent()
+        && submissionId == request.auth.uid
+        && request.resource.data.studentUid == request.auth.uid
+        && request.resource.data.name is string
+        && request.resource.data.name.size() >= 3
+        && request.resource.data.name.size() <= 100
+        && request.resource.data.studentClass in [
+          'Class 9',
+          'Class 10',
+          'Class 11',
+          'Class 12'
+        ]
+        && request.resource.data.score is int
+        && request.resource.data.score >= 0
+        && request.resource.data.score <= 16
+        && request.resource.data.imagesCount == 1
+        && request.resource.data.handwrittenMark == null;
+
+      // Only the teacher can read or modify submissions.
+      allow read, update, delete: if isTeacher();
+
+      match /images/{imageId} {
+
+        // The photo is created together with its submission.
+        allow create: if isStudent()
+          && imageId == 'solution'
+          && getAfter(
+            /databases/$(database)/documents/submissions/$(submissionId)
+          ).data.studentUid == request.auth.uid
+          && request.resource.data.imageData is string
+          && request.resource.data.imageData.size() <= 900000
+          && request.resource.data.questionNumber == 17;
+
+        allow read, update, delete: if isTeacher();
+      }
+    }
+
+    match /publicRankings/{rankingId} {
+
+      allow read: if true;
+
+      allow create: if isTeacher() ||
+        (
+          isStudent()
+          && rankingId == request.auth.uid
+          && exists(
+            /databases/$(database)/documents/submissions/$(rankingId)
+          )
+          && get(
+            /databases/$(database)/documents/submissions/$(rankingId)
+          ).data.studentUid == request.auth.uid
+          && request.resource.data.name ==
+            get(/databases/$(database)/documents/submissions/$(rankingId)).data.name
+          && request.resource.data.studentClass ==
+            get(/databases/$(database)/documents/submissions/$(rankingId)).data.studentClass
+          && request.resource.data.score ==
+            get(/databases/$(database)/documents/submissions/$(rankingId)).data.score
+        );
+
+      allow update, delete: if isTeacher();
+    }
+
+    // Exam bank: everyone can view; only the teacher can upload or delete.
     match /examBank/{photoId} {
       allow read: if true;
-      allow create: if request.auth != null
-        && request.auth.token.firebase.sign_in_provider == 'password'
-        && request.resource.data.keys().hasAll(['title','trimester','imageData','fileName','createdAt'])
-        && request.resource.data.trimester in ['term1','term2','term3']
+
+      allow create: if isTeacher()
+        && request.resource.data.keys().hasAll([
+          'title', 'trimester', 'imageData', 'fileName', 'createdAt'
+        ])
+        && request.resource.data.trimester in ['term1', 'term2', 'term3']
         && request.resource.data.title is string
         && request.resource.data.title.size() <= 120
         && request.resource.data.imageData is string
         && request.resource.data.imageData.size() < 800000
         && request.resource.data.fileName is string;
-      allow update: if false;
-      allow delete: if request.auth != null
-        && request.auth.token.firebase.sign_in_provider == 'password';
-    }
 
+      allow update: if false;
+      allow delete: if isTeacher();
+    }
   }
 }
