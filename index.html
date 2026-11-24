@@ -107,25 +107,36 @@
 
     <div class="form-divider"></div>
 
-    <label for="studentName">الاسم واللقب الكامل</label>
-    <input
-      id="studentName"
-      maxlength="100"
-      placeholder="اكتب اسمك ولقبك"
-      autocomplete="name"
-    >
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
+      <button id="registerModeBtn" type="button" class="primary">إنشاء حساب جديد</button>
+      <button id="loginModeBtn" type="button" class="secondary">تسجيل الدخول</button>
+    </div>
 
-    <label for="studentClass">اختر قسمك</label>
-    <select id="studentClass" required>
-      <option value="">-- اختر القسم --</option>
-      <option value="Class 9">Class 9</option>
-      <option value="Class 10">Class 10</option>
-      <option value="Class 11">Class 11</option>
-      <option value="Class 12">Class 12</option>
-    </select>
+    <div id="registerFields">
+      <label for="studentName">الاسم واللقب الكامل</label>
+      <input id="studentName" maxlength="100" placeholder="اكتب اسمك ولقبك" autocomplete="name">
 
-    <button id="startBtn" class="primary start-button">
-      ابدأ الاختبار <span>←</span>
+      <label for="studentClass">اختر قسمك</label>
+      <select id="studentClass" required>
+        <option value="">-- اختر القسم --</option>
+        <option value="Class 9">1م9</option>
+        <option value="Class 10">1م10</option>
+        <option value="Class 11">1م11</option>
+        <option value="Class 12">1م12</option>
+      </select>
+    </div>
+
+    <label for="studentEmail">البريد الإلكتروني</label>
+    <input id="studentEmail" type="email" placeholder="example@email.com" autocomplete="email">
+
+    <label for="studentPassword">كلمة المرور</label>
+    <input id="studentPassword" type="password" minlength="6" placeholder="ستة أحرف على الأقل" autocomplete="current-password">
+
+    <button id="authSubmitBtn" class="primary start-button" type="button">
+      إنشاء الحساب وبدء الاختبار <span>←</span>
+    </button>
+    <button id="forgotPasswordBtn" class="secondary" type="button" style="width:100%;margin-top:8px;">
+      نسيت كلمة المرور؟
     </button>
 
     <p class="muted small exam-note">
