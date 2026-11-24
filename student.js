@@ -165,7 +165,7 @@ function renderPublicRanking(snapshot, selectedClass) {
     const finalMark =
       manual === null || manual === undefined || manual === ""
         ? "—"
-        : `${(studentScore + Number(manual)).toFixed(2)} /20`;
+        : `${(studentScore + Number(manual)).toFixed(2)}`;
 
     rows += `
       <tr>
