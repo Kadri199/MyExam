@@ -74,14 +74,14 @@ button:disabled {
 }
 
 .brand-avatar {
-  width: 46px;
-  height: 46px;
+  width: 36px;
+  height: 36px;
   display: block;
-  flex: 0 0 46px;
+  flex: 0 0 36px;
   object-fit: contain;
   border-radius: 50%;
   background: #eff6ff;
-  border: 2px solid #dbeafe;
+  border: 1px solid #dbeafe;
 }
 
 .teacher-link {
