@@ -3,7 +3,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/fireba
 
 import {
   getFirestore, doc, getDoc, collection, serverTimestamp,
-  getDocs, query, where, setDoc, writeBatch
+  getDocs, query, where, setDoc, writeBatch, onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 import {
@@ -20,6 +20,9 @@ const $ = id => document.getElementById(id);
 let quiz, name = "", studentClass = "", page = 0;
 let answers = {};
 let answerFile = null;
+
+// Public ranking real-time listener
+let rankingUnsubscribe = null;
 
 const classes = ["Class 9", "Class 10", "Class 11", "Class 12"];
 
@@ -117,8 +120,100 @@ async function loadQuiz() {
    PUBLIC RANKING ON HOME PAGE
 ========================================= */
 
+// Stop the previous real-time listener.
+function stopRankingListener() {
+  if (rankingUnsubscribe) {
+    rankingUnsubscribe();
+    rankingUnsubscribe = null;
+  }
+}
+
+// Render public ranking.
+function renderPublicRanking(snapshot, selectedClass) {
+  const students = snapshot.docs.map(d => ({
+    id: d.id,
+    ...d.data()
+  }));
+
+  // Keep ranking sorted by MCQ score /16.
+  students.sort((a, b) =>
+    Number(b.score || 0) - Number(a.score || 0)
+  );
+
+  if (!students.length) {
+    $("rankingResults").innerHTML = `
+      <h3>🏆 ترتيب ${esc(selectedClass)}</h3>
+      <p>لا توجد نتائج في هذا القسم حالياً.</p>
+    `;
+    return;
+  }
+
+  let rows = "";
+  let previousScore = null;
+  let currentRank = 0;
+
+  students.forEach((student, index) => {
+    const studentScore = Number(student.score || 0);
+
+    if (studentScore !== previousScore) {
+      currentRank = index + 1;
+      previousScore = studentScore;
+    }
+
+    const manual = student.handwrittenMark;
+
+    const finalMark =
+      manual === null || manual === undefined || manual === ""
+        ? "—"
+        : `${(studentScore + Number(manual)).toFixed(2)} /20`;
+
+    rows += `
+      <tr>
+        <td style="padding:10px;text-align:center;">
+          ${currentRank}
+        </td>
+
+        <td style="padding:10px;">
+          ${esc(student.name)}
+        </td>
+
+        <td style="padding:10px;text-align:center;direction:ltr;">
+          <strong>${studentScore}</strong> /16
+        </td>
+
+        <td style="padding:10px;text-align:center;direction:ltr;">
+          <strong>${finalMark}</strong>
+        </td>
+      </tr>
+    `;
+  });
+
+  $("rankingResults").innerHTML = `
+    <h3 style="margin-bottom:12px;">
+      🏆 ترتيب ${esc(selectedClass)}
+    </h3>
+
+    <div style="overflow-x:auto;">
+      <table style="width:100%;border-collapse:collapse;text-align:right;">
+        <thead>
+          <tr style="background:#f1f1f1;">
+            <th style="padding:10px;text-align:center;">الترتيب</th>
+            <th style="padding:10px;">اسم التلميذ</th>
+            <th style="padding:10px;text-align:center;">العلامة /16</th>
+            <th style="padding:10px;text-align:center;">العلامة النهائية /20</th>
+          </tr>
+        </thead>
+
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+  `;
+}
+
 // Open the ranking page.
 $("showRankingBtn").onclick = () => {
+  stopRankingListener();
+
   $("startCard").classList.add("hidden");
   $("rankingCard").classList.remove("hidden");
   $("notice").classList.add("hidden");
@@ -143,8 +238,8 @@ $("showRankingBtn").onclick = () => {
   `;
 };
 
-// Select a class and load its ranking.
-$("rankingClasses").onclick = async event => {
+// Select a class and listen for live ranking updates.
+$("rankingClasses").onclick = event => {
   const button = event.target.closest("[data-class]");
 
   if (!button) return;
@@ -153,104 +248,42 @@ $("rankingClasses").onclick = async event => {
 
   if (!classes.includes(selectedClass)) return;
 
+  // Stop listening to the previously selected class.
+  stopRankingListener();
+
   document.querySelectorAll(".ranking-class-btn").forEach(btn => {
-    btn.disabled = true;
+    btn.disabled = false;
+    btn.style.opacity = btn.dataset.class === selectedClass ? "1" : "0.7";
   });
 
   $("rankingResults").innerHTML = `
     <p class="muted">جارٍ تحميل الترتيب...</p>
   `;
 
-  try {
-    const rankingQuery = query(
-      collection(db, "publicRankings"),
-      where("studentClass", "==", selectedClass)
-    );
+  const rankingQuery = query(
+    collection(db, "publicRankings"),
+    where("studentClass", "==", selectedClass)
+  );
 
-    const snapshot = await getDocs(rankingQuery);
+  rankingUnsubscribe = onSnapshot(
+    rankingQuery,
+    snapshot => {
+      renderPublicRanking(snapshot, selectedClass);
+    },
+    error => {
+      console.error("Public ranking error:", error);
 
-    const students = snapshot.docs.map(d => ({
-      id: d.id,
-      ...d.data()
-    }));
-
-    students.sort((a, b) =>
-      Number(b.score || 0) - Number(a.score || 0)
-    );
-
-    if (!students.length) {
       $("rankingResults").innerHTML = `
-        <h3>🏆 ترتيب ${esc(selectedClass)}</h3>
-        <p>لا توجد نتائج في هذا القسم حالياً.</p>
+        <p>تعذر تحميل الترتيب حالياً. يرجى المحاولة لاحقاً.</p>
       `;
-      return;
     }
-
-    let rows = "";
-    let previousScore = null;
-    let currentRank = 0;
-
-    students.forEach((student, index) => {
-      const studentScore = Number(student.score || 0);
-
-      if (studentScore !== previousScore) {
-        currentRank = index + 1;
-        previousScore = studentScore;
-      }
-
-      rows += `
-        <tr>
-          <td style="padding:10px;text-align:center;">
-            ${currentRank}
-          </td>
-
-          <td style="padding:10px;">
-            ${esc(student.name)}
-          </td>
-
-          <td style="padding:10px;text-align:center;direction:ltr;">
-            <strong>${studentScore}</strong> /16
-          </td>
-        </tr>
-      `;
-    });
-
-    $("rankingResults").innerHTML = `
-      <h3 style="margin-bottom:12px;">
-        🏆 ترتيب ${esc(selectedClass)}
-      </h3>
-
-      <div style="overflow-x:auto;">
-        <table style="width:100%;border-collapse:collapse;text-align:right;">
-          <thead>
-            <tr style="background:#f1f1f1;">
-              <th style="padding:10px;text-align:center;">الترتيب</th>
-              <th style="padding:10px;">اسم التلميذ</th>
-              <th style="padding:10px;text-align:center;">العلامة</th>
-            </tr>
-          </thead>
-
-          <tbody>${rows}</tbody>
-        </table>
-      </div>
-    `;
-
-  } catch (error) {
-    console.error("Public ranking error:", error);
-
-    $("rankingResults").innerHTML = `
-      <p>تعذر تحميل الترتيب حالياً. يرجى المحاولة لاحقاً.</p>
-    `;
-
-  } finally {
-    document.querySelectorAll(".ranking-class-btn").forEach(btn => {
-      btn.disabled = false;
-    });
-  }
+  );
 };
 
 // Return to the home page.
 $("closeRankingBtn").onclick = () => {
+  stopRankingListener();
+
   $("rankingCard").classList.add("hidden");
   $("startCard").classList.remove("hidden");
   $("notice").classList.add("hidden");
@@ -378,7 +411,7 @@ async function showClassRanking(submissionId, score) {
     }));
 
     students.sort((a, b) =>
-      Number(b.score) - Number(a.score)
+      Number(b.score || 0) - Number(a.score || 0)
     );
 
     let rows = "";
@@ -386,7 +419,7 @@ async function showClassRanking(submissionId, score) {
     let currentRank = 0;
 
     students.forEach((student, index) => {
-      const studentScore = Number(student.score);
+      const studentScore = Number(student.score || 0);
 
       if (studentScore !== previousScore) {
         currentRank = index + 1;
@@ -395,11 +428,19 @@ async function showClassRanking(submissionId, score) {
 
       const isCurrentStudent = student.id === submissionId;
 
+      const manual = student.handwrittenMark;
+
+      const finalMark =
+        manual === null || manual === undefined || manual === ""
+          ? "—"
+          : `${(studentScore + Number(manual)).toFixed(2)} /20`;
+
       rows += `
         <tr style="${isCurrentStudent ? "background:#e8f5e9;font-weight:bold;" : ""}">
           <td style="padding:10px;text-align:center;">${currentRank}</td>
           <td style="padding:10px;">${esc(student.name)}${isCurrentStudent ? " (أنت)" : ""}</td>
           <td style="padding:10px;text-align:center;direction:ltr;">${studentScore}/16</td>
+          <td style="padding:10px;text-align:center;direction:ltr;">${finalMark}</td>
         </tr>
       `;
     });
@@ -421,7 +462,8 @@ async function showClassRanking(submissionId, score) {
             <tr style="background:#f1f1f1;">
               <th style="padding:10px;text-align:center;">الترتيب</th>
               <th style="padding:10px;">اسم التلميذ</th>
-              <th style="padding:10px;text-align:center;">العلامة</th>
+              <th style="padding:10px;text-align:center;">العلامة /16</th>
+              <th style="padding:10px;text-align:center;">العلامة النهائية /20</th>
             </tr>
           </thead>
           <tbody>${rows}</tbody>
@@ -623,6 +665,7 @@ $("submitBtn").onclick = async () => {
           name,
           studentClass,
           score,
+          handwrittenMark: null,
           createdAt: serverTimestamp()
         }
       );
