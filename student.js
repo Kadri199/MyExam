@@ -9,7 +9,7 @@ import {
 import {
   getAuth, createUserWithEmailAndPassword,
   signInWithEmailAndPassword, sendPasswordResetEmail,
-  onAuthStateChanged
+  onAuthStateChanged, signOut
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 import { firebaseConfig } from "./firebase-config.js";
@@ -386,7 +386,7 @@ $("authSubmitBtn").onclick = async () => {
       const credential = await signInWithEmailAndPassword(auth, email, password);
       const profile = await getDoc(doc(db, "studentProfiles", credential.user.uid));
       if (!profile.exists()) {
-        await auth.signOut();
+        await signOut(auth);
         throw new Error("لم نعثر على ملف التلميذ. يرجى إنشاء حساب جديد أو التواصل مع الأستاذ.");
       }
       name = profile.data().name;
