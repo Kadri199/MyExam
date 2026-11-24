@@ -22,6 +22,8 @@ const $ = id => document.getElementById(id);
 let quiz = null;
 let submissions = [];
 let selectedClass = "Class 9";
+let tests=[];
+let selectedTestId="wazifa2";
 
 const classes = ["Class 9", "Class 10", "Class 11", "Class 12"];
 
@@ -108,52 +110,34 @@ onAuthStateChanged(auth, async user => {
   }
 });
 
-async function loadAll() {
-  await loadQuiz();
-  await loadResults();
+async function loadAll(){ await loadTests(); await loadResults(); }
+
+async function loadTests(){
+ const legacy=await getDoc(doc(db,"settings","quiz"));
+ const base=legacy.exists()?legacy.data():{title:"وظيفة 2",mcq:Array.from({length:16},(_,i)=>({q:`السؤال ${i+1}`,options:["الخيار الأول","الخيار الثاني","الخيار الثالث"],correct:0})),imageQuestions:[{q:"السؤال 17 — الحل الكامل"}]};
+ const snap=await getDocs(collection(db,"examTests"));
+ tests=snap.docs.map(d=>({id:d.id,...d.data()}));
+ if(!tests.some(t=>t.id==="wazifa2")){
+  base.title="وظيفة 2";base.startAt=base.startAt||Date.now();base.endAt=base.endAt||new Date("2026-11-24T23:59:00+01:00").getTime();
+  await setDoc(doc(db,"examTests","wazifa2"),base);tests.push({id:"wazifa2",...base});
+ }
+ const metaRef=doc(db,"settings","exams"),metaSnap=await getDoc(metaRef),meta=metaSnap.exists()?metaSnap.data():{};
+ if(!meta.activeTestId||!tests.some(t=>t.id===meta.activeTestId))meta.activeTestId="wazifa2";
+ await setDoc(metaRef,{activeTestId:meta.activeTestId,tests:tests.map(t=>({id:t.id,title:t.title}))},{merge:true});
+ selectedTestId=tests.some(t=>t.id===selectedTestId)?selectedTestId:meta.activeTestId;
+ await loadQuiz(); renderTestManager(meta.activeTestId);
 }
-
-async function loadQuiz() {
-  const s = await getDoc(doc(db, "settings", "quiz"));
-
-  quiz = s.exists()
-    ? s.data()
-    : {
-        title: "وظيفة 2",
-        mcq: Array.from({ length: 16 }, (_, i) => ({
-          q: `السؤال ${i + 1}`,
-          options: ["الخيار الأول", "الخيار الثاني", "الخيار الثالث"],
-          correct: 0
-        })),
-        imageQuestions: [
-          { q: "السؤال 17 — الحل الكامل" }
-        ]
-      };
-
-  // Keep the existing question content; add the first test's title and schedule.
-  const defaultEnd = new Date("2026-11-24T23:59:00+01:00").getTime();
-  const scheduleNeedsSave = quiz.title !== "وظيفة 2" || !quiz.startAt || !quiz.endAt;
-  quiz.title = "وظيفة 2";
-  if (!quiz.startAt) quiz.startAt = Date.now();
-  if (!quiz.endAt) quiz.endAt = defaultEnd;
-  if (scheduleNeedsSave) {
-    await setDoc(doc(db, "settings", "quiz"), quiz, { merge: true });
-  }
-
-  $("testStartAt").value = toLocalDateTimeInput(quiz.startAt);
-  $("testEndAt").value = toLocalDateTimeInput(quiz.endAt);
-
-  const firstImageQuestion = Array.isArray(quiz.imageQuestions)
-    ? quiz.imageQuestions[0]
-    : null;
-
-  quiz.imageQuestions = [
-    {
-      q: firstImageQuestion?.q || "السؤال 17 — الحل الكامل"
-    }
-  ];
-
-  renderEditor();
+async function loadQuiz(){
+ const snap=await getDoc(doc(db,"examTests",selectedTestId));if(!snap.exists())throw Error("الاختبار غير موجود");
+ quiz=snap.data();const img=quiz.imageQuestions?.[0];quiz.imageQuestions=[{q:img?.q||"السؤال 17 — الحل الكامل"}];
+ $("testStartAt").value=toLocalDateTimeInput(quiz.startAt||Date.now());$("testEndAt").value=toLocalDateTimeInput(quiz.endAt||Date.now());
+ $("currentTestTitle").textContent=quiz.title||"اختبار جديد";renderEditor();
+}
+function renderTestManager(activeId){
+ $("testManager").innerHTML=`<h3>الاختبارات</h3><div style="display:flex;flex-wrap:wrap;gap:8px;margin:12px 0">${tests.map(t=>`<button type="button" data-test="${esc(t.id)}" class="${t.id===selectedTestId?"primary":"secondary"}">${esc(t.title)} ${t.id===activeId?"— منشور":""}</button>`).join("")}<button id="addTestBtn" class="secondary" type="button">＋ إضافة اختبار</button></div><button id="publishTestBtn" class="primary" type="button">نشر الاختبار المحدد</button>`;
+ document.querySelectorAll("[data-test]").forEach(b=>b.onclick=async()=>{selectedTestId=b.dataset.test;await loadQuiz();renderTestManager(activeId);});
+ $("addTestBtn").onclick=async()=>{const title=prompt("اسم الاختبار الجديد");if(!title?.trim())return;const id="test_"+Date.now();const item={title:title.trim(),startAt:Date.now(),endAt:new Date("2026-11-24T23:59:00+01:00").getTime(),mcq:Array.from({length:16},(_,i)=>({q:`السؤال ${i+1}`,options:["الخيار الأول","الخيار الثاني","الخيار الثالث"],correct:0})),imageQuestions:[{q:"السؤال 17 — الحل الكامل"}]};await setDoc(doc(db,"examTests",id),item);tests.push({id,...item});selectedTestId=id;await setDoc(doc(db,"settings","exams"),{tests:tests.map(t=>({id:t.id,title:t.title}))},{merge:true});await loadQuiz();renderTestManager(activeId);};
+ $("publishTestBtn").onclick=async()=>{await setDoc(doc(db,"settings","exams"),{activeTestId:selectedTestId,tests:tests.map(t=>({id:t.id,title:t.title}))},{merge:true});renderTestManager(selectedTestId);notice("تم نشر الاختبار للتلاميذ.");};
 }
 
 // Mathematical editor helper
@@ -327,11 +311,13 @@ $("saveQuizBtn").onclick = async () => {
   });
 
   try {
-    quiz.title = "وظيفة 2";
-    quiz.startAt = startAt;
-    quiz.endAt = endAt;
-    await setDoc(doc(db, "settings", "quiz"), quiz);
-    $("saveStatus").textContent = "تم حفظ أسئلة وظيفة 2 وموعد فتحه وإغلاقه بنجاح.";
+    quiz.startAt=startAt;quiz.endAt=endAt;
+    await setDoc(doc(db,"examTests",selectedTestId),quiz);
+    if(selectedTestId==="wazifa2") await setDoc(doc(db,"settings","quiz"),quiz);
+    const idx=tests.findIndex(t=>t.id===selectedTestId);if(idx>=0)tests[idx]={id:selectedTestId,...quiz};
+    const meta=await getDoc(doc(db,"settings","exams"));await setDoc(doc(db,"settings","exams"),{tests:tests.map(t=>({id:t.id,title:t.title}))},{merge:true});
+    renderTestManager(meta.exists()?meta.data().activeTestId:"wazifa2");
+    $("saveStatus").textContent="تم حفظ الأسئلة والموعد بنجاح.";
   } catch (e) {
     $("saveStatus").textContent = "تعذر الحفظ: " + e.message;
   }
@@ -383,10 +369,7 @@ async function loadResults() {
       )
     );
 
-    submissions = snap.docs.map(d => ({
-      id: d.id,
-      ...d.data()
-    }));
+    submissions = snap.docs.map(d => ({id:d.id,...d.data(),testId:d.data().testId||"wazifa2",testName:d.data().testName||"وظيفة 2"}));
 
     // Keep the student-facing public ranking based on MCQ /16,
     // and also publish the handwritten mark for the final /20.
@@ -398,7 +381,10 @@ async function loadResults() {
             name: student.name,
             studentClass: student.studentClass,
             score: student.score,
-            handwrittenMark: student.handwrittenMark ?? null
+            handwrittenMark: student.handwrittenMark ?? null,
+            studentUid: student.studentUid || student.id,
+            testId: student.testId || "wazifa2",
+            testName: student.testName || "وظيفة 2"
           },
           { merge: true }
         )
@@ -415,7 +401,7 @@ async function loadResults() {
 
 function renderClassRanking() {
   const classResults = getRankedResults(
-    submissions.filter(s => s.studentClass === selectedClass)
+    submissions.filter(s => s.studentClass === selectedClass && (s.testId||"wazifa2")===selectedTestId)
   );
 
   document.querySelectorAll("[data-class]").forEach(button => {
@@ -609,7 +595,7 @@ function renderClassRanking() {
 function printClass() {
   // Printed results use the same final-mark ranking as the dashboard.
   const classResults = getRankedResults(
-    submissions.filter(s => s.studentClass === selectedClass)
+    submissions.filter(s => s.studentClass === selectedClass && (s.testId||"wazifa2")===selectedTestId)
   );
 
   const rows = classResults.map(s => {
