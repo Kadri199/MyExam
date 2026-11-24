@@ -202,7 +202,7 @@ students.forEach((student, index) => {
     rows += `
       <tr>
         <td style="padding:10px;text-align:center;">
-          ${currentRank} ${getRankMedal(currentRank)}
+          ${currentRank} ${finalScore === null ? "" : getRankMedal(currentRank)}
         </td>
 
         <td style="padding:10px;">
@@ -372,7 +372,7 @@ async function openStudentProfile() {
       });
       const myRank = classmates.findIndex(item => item.id === user.uid);
       let rank = "—";
-      if (myRank >= 0) {
+      if (myRank >= 0 && final !== null) {
         let prev = null;
         classmates.forEach((item, index) => {
           const score = getFinalScore(item);
@@ -652,7 +652,7 @@ students.forEach((student, index) => {
 
       rows += `
         <tr style="${isCurrentStudent ? "background:#e8f5e9;font-weight:bold;" : ""}">
-          <td style="padding:10px;text-align:center;">${currentRank}</td>
+          <td style="padding:10px;text-align:center;">${currentRank} ${finalScore === null ? "" : getRankMedal(currentRank)}</td>
           <td style="padding:10px;">${esc(student.name)}${isCurrentStudent ? " (أنت)" : ""}</td>
           <td style="padding:10px;text-align:center;direction:ltr;">${studentScore}/16</td>
           <td style="padding:10px;text-align:center;direction:ltr;">${finalMark}</td>
