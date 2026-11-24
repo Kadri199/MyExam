@@ -374,10 +374,42 @@ async function openStudentProfile() {
     name = profile.name || name;
     studentClass = profile.studentClass || studentClass;
 
-    const ownResult = await getDoc(doc(db, "publicRankings", user.uid));
-    let completed = 0;
+    const metaSnap = await getDoc(doc(db, "settings", "exams"));
+    const publishedTestId = metaSnap.exists() ? (metaSnap.data().activeTestId || "") : "";
+    let publishedTest = null;
+    if (publishedTestId) {
+      const publishedSnap = await getDoc(doc(db, "examTests", publishedTestId));
+      if (publishedSnap.exists()) publishedTest = { id: publishedTestId, ...publishedSnap.data() };
+    }
+
+    const ownResult = publishedTestId
+      ? await getDoc(doc(db, "publicRankings", user.uid + "__" + publishedTestId))
+      : await getDoc(doc(db, "publicRankings", user.uid));
+    let completed = ownResult.exists() ? 1 : 0;
     let bestMark = "—";
-    let resultHtml = '<p class="muted">لم تُرسل أي اختبار بعد.</p>';
+    let resultHtml = '<p class="muted">لم تنجز أي وظيفة بعد.</p>';
+    let publishedHtml = "";
+    if (publishedTest) {
+      const startAt = Number(publishedTest.startAt);
+      const endAt = Number(publishedTest.endAt);
+      const now = Date.now();
+      const scheduleText = Number.isFinite(startAt) && Number.isFinite(endAt)
+        ? (now < startAt ? "تبدأ في " + new Date(startAt).toLocaleString("ar-DZ", { dateStyle: "medium", timeStyle: "short" })
+          : now > endAt ? "انتهى وقت إنجازها" : "متاحة للإنجاز الآن")
+        : "لم يحدد الأستاذ موعدها بعد";
+      const alreadyDone = ownResult.exists();
+      publishedHtml = `
+        <div class="profile-result" style="margin:16px 0;border:2px solid #2563eb;">
+          <h3>📝 الوظيفة المنشورة</h3>
+          <p><strong>${esc(publishedTest.title || "وظيفة")}</strong></p>
+          <p>${esc(scheduleText)}</p>
+          ${alreadyDone
+            ? '<p><strong>✓ أنجزت هذه الوظيفة بالفعل.</strong></p>'
+            : '<button id="profileStartExamBtn" class="primary start-button" type="button" style="width:100%;margin-top:10px;">ابدأ الوظيفة ←</button>'}
+        </div>`;
+    } else {
+      publishedHtml = '<p class="muted">لا توجد وظيفة منشورة حالياً. ستظهر هنا عندما ينشر الأستاذ وظيفة جديدة.</p>';
+    }
 
     if (ownResult.exists()) {
       const data = ownResult.data();
@@ -418,7 +450,7 @@ async function openStudentProfile() {
       const manual = data.handwrittenMark;
       resultHtml = `
         <div class="profile-result">
-          <h3>نتيجة الاختبار المتاح</h3>
+          <h3>نتيجة الوظيفة</h3>
           <p>الاختيار من متعدد: <strong>${mcq} / 16</strong></p>
           <p>السؤال التطبيقي: <strong>${manual == null ? "بانتظار تصحيح الأستاذ" : Number(manual) + " / 4"}</strong></p>
           <p>العلامة النهائية: <strong>${bestMark}</strong></p>
@@ -435,15 +467,14 @@ async function openStudentProfile() {
         <div class="profile-item"><span>الاختبارات المكتملة</span><strong>${completed}</strong></div>
         <div class="profile-item"><span>أفضل علامة مسجلة</span><strong>${bestMark}</strong></div>
       </div>
-      <h3>📚 سجل الاختبارات</h3>
+      <h3>📚 الوظائف</h3>
+      ${publishedHtml}
+      <h3>📖 سجل الوظائف المنجزة</h3>
       ${resultHtml}
       <div id="profileExamNotice" class="notice hidden" role="alert" aria-live="polite" style="margin:16px 0;"></div>
-      <button id="profileStartExamBtn" class="primary start-button" type="button" style="width:100%;margin-top:18px;">
-        📝 بدء الاختبار الحالي من ملفي الشخصي ←
-      </button>
     `;
 
-    $("profileStartExamBtn").onclick = async () => {
+    if ($("profileStartExamBtn")) $("profileStartExamBtn").onclick = async () => {
       const button = $("profileStartExamBtn");
       const message = $("profileExamNotice");
       button.disabled = true;
