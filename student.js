@@ -158,10 +158,8 @@ function renderPublicRanking(snapshot, selectedClass) {
     ...d.data()
   }));
 
-  // Keep ranking sorted by MCQ score /16.
-  students.sort((a, b) =>
-    Number(b.score || 0) - Number(a.score || 0)
-  );
+  // Sort by final mark /20; uncorrected pupils stay at the bottom.
+students.sort(sortByFinalScore);
 
   if (!students.length) {
     $("rankingResults").innerHTML = `
