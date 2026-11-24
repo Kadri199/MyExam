@@ -23,6 +23,7 @@ let quiz, name = "", studentClass = "", page = 0;
 let authMode = "register";
 let answers = {};
 let answerFile = null;
+let activeTestId="wazifa2", activeTestName="وظيفة 2";
 
 // Public ranking real-time listener
 let rankingUnsubscribe = null;
@@ -106,7 +107,7 @@ function activateMathFields() {
 }
 
 async function loadQuiz() {
-  const snap = await getDoc(doc(db, "settings", "quiz"));
+  const snap = await getDoc(doc(db, "examTests", activeTestId));
   quiz = snap.exists() ? snap.data() : defaultQuiz;
 
   if (!Array.isArray(quiz.mcq) || quiz.mcq.length !== 16) {
@@ -447,8 +448,11 @@ async function beginStudentExam() {
   }
 
   const uid = user.uid;
-  const scheduleSnap = await getDoc(doc(db, "settings", "quiz"));
-  const schedule = scheduleSnap.exists() ? scheduleSnap.data() : null;
+  const meta=await getDoc(doc(db,"settings","exams"));
+  activeTestId=meta.exists()?(meta.data().activeTestId||"wazifa2"):"wazifa2";
+  const scheduleSnap=await getDoc(doc(db,"examTests",activeTestId));
+  const schedule=scheduleSnap.exists()?scheduleSnap.data():null;
+  activeTestName=schedule?.title||"وظيفة 2";
   if (!schedule || !Number.isFinite(Number(schedule.startAt)) || !Number.isFinite(Number(schedule.endAt))) {
     throw new Error("لم يتم تحديد موعد الاختبار بعد. يرجى التواصل مع الأستاذ.");
   }
@@ -460,10 +464,9 @@ async function beginStudentExam() {
     throw new Error("انتهى وقت بدء الاختبار. لا يمكن فتح محاولة جديدة.");
   }
 
-  const previousRanking = await getDoc(doc(db, "publicRankings", uid));
-  if (previousRanking.exists()) {
-    throw new Error("لقد أرسلت الاختبار بهذا الحساب من قبل. لا يمكنك الإرسال مرة ثانية.");
-  }
+  const previousRanking=await getDoc(doc(db,"publicRankings",uid+"__"+activeTestId));
+  const legacy=activeTestId==="wazifa2"?await getDoc(doc(db,"publicRankings",uid)):{exists:()=>false};
+  if(previousRanking.exists()||legacy.exists())throw new Error("لقد أرسلت هذا الاختبار بهذا الحساب من قبل.");
 
   await loadQuiz();
   $("nameLabel").textContent = name;
@@ -848,8 +851,8 @@ $("submitBtn").onclick = async () => {
     // Compress the photo before saving anything.
     const imageData = await compressImage(answerFile);
 
-    // The UID is the permanent submission document ID.
-    const submissionId = uid;
+    // Each test has its own submission record.
+    const submissionId = uid + "__" + activeTestId;
 
     // Save the submission and photo atomically.
     const batch = writeBatch(db);
@@ -868,6 +871,8 @@ $("submitBtn").onclick = async () => {
       name,
       studentUid: uid,
       studentClass,
+      testId: activeTestId,
+      testName: activeTestName,
       answers,
       score,
       imagesCount: 1,
@@ -891,7 +896,10 @@ $("submitBtn").onclick = async () => {
         doc(db, "publicRankings", submissionId),
         {
           name,
+          studentUid: uid,
           studentClass,
+          testId: activeTestId,
+          testName: activeTestName,
           score,
           handwrittenMark: null,
           createdAt: serverTimestamp()
