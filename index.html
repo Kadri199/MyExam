@@ -4,122 +4,201 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="google-site-verification" content="AqosvgtALJ_hD1hvpxw1yYdnH5MB8AfSUKvrTGZPd-o" />
+
 <title>Kadri_Class — اختبار الرياضيات</title>
-<meta name="description" content="Kadri_Class منصة تعليمية جزائرية لاجتياز اختبارات الرياضيات الإلكترونية لتلاميذ الطور المتوسط، مع التصحيح الآلي وعرض النتائج والترتيب.">
+
+<meta name="description" content="Kadri_Class منصة تعليمية جزائرية لاجتياز اختبارات الرياضيات الإلكترونية لتلاميذ الطور المتوسط.">
+
 <link rel="stylesheet" href="style.css">
 <link rel="manifest" href="./manifest.json">
-<meta name="theme-color" content="#173b67">
+<meta name="theme-color" content="#2563eb">
+
 <script defer src="https://cdn.jsdelivr.net/npm/mathlive"></script>
 </head>
 
 <body>
 
 <header class="top">
-  <div class="brand">∑ <span>Kadri_Class</span></div>
-  <a href="admin.html" class="teacher-link">دخول الأستاذ</a>
+  <a href="index.html" class="brand">
+    <span class="brand-symbol">∑</span>
+    <span>Kadri_Class</span>
+  </a>
+
+  <a href="admin.html" class="teacher-link">
+    دخول الأستاذ ←
+  </a>
 </header>
 
-<main class="wrap">
+<main class="wrap wide">
 
-<section class="hero">
-  <span class="eyebrow">منصة الاختبارات المدرسية</span>
-  <h1>اختبار الرياضيات الإلكتروني</h1>
-  <p>أجب عن الأسئلة بعناية، ثم أرسل إجاباتك إلى الأستاذ.</p>
-  <p>
-  Kadri_Class منصة اختبارات الرياضيات الإلكترونية لتلاميذ التعليم المتوسط في الجزائر،
-  توفر اختبارات تفاعلية وتصحيحاً آلياً وعرض النتائج والترتيب حسب الأقسام.
-  </p>
-</section>
+  <!-- WELCOME HERO -->
+  <section class="welcome-hero">
 
-<section id="startCard" class="panel">
+    <div class="welcome-content">
+      <span class="welcome-label">منصة تعليمية جزائرية</span>
 
-  <button id="showRankingBtn" class="secondary">
-    🏆 عرض ترتيب الأقسام
-  </button>
+      <h1>
+        تعلّم، اختبر،
+        <span>وتفوّق!</span>
+      </h1>
 
-  <h2>بيانات التلميذ</h2>
+      <p>
+        مرحباً بك في Kadri_Class.
+        اختبر مستواك في الرياضيات وتابع ترتيبك مع زملائك.
+      </p>
 
-  <label for="studentName">الاسم واللقب الكامل</label>
-  <input id="studentName" maxlength="100"
-    placeholder="اكتب اسمك ولقبك" autocomplete="name">
-
-  <label for="studentClass">اختر قسمك:</label>
-  <select id="studentClass" required>
-    <option value="">-- اختر القسم --</option>
-    <option value="Class 9">Class 9</option>
-    <option value="Class 10">Class 10</option>
-    <option value="Class 11">Class 11</option>
-    <option value="Class 12">Class 12</option>
-  </select>
-
-  <button id="startBtn" class="primary">
-    ابدأ الاختبار <span>←</span>
-  </button>
-
-  <p class="muted small">
-    يتكون الاختبار من 17 سؤالاً: 16 اختياراً من متعدد وسؤال واحد يتطلب إرفاق صورة الحل.
-  </p>
-
-</section>
-
-<section id="rankingCard" class="panel hidden">
-
-  <h2>🏆 ترتيب التلاميذ</h2>
-
-  <p class="muted small">اختر قسمك للاطلاع على الترتيب حسب العلامة من 16.</p>
-
-  <div id="rankingClasses"></div>
-
-  <div id="rankingResults"></div>
-
-  <button id="closeRankingBtn" class="secondary">
-    العودة
-  </button>
-
-</section>
-
-<section id="quizCard" class="panel hidden">
-
-  <div class="quiz-head">
-    <div>
-      <span class="muted small">التلميذ</span>
-      <strong id="nameLabel"></strong>
+      <a href="#startCard" class="hero-button">
+        ابدأ رحلتك الآن ↓
+      </a>
     </div>
-    <span class="counter" id="progress">1 / 20</span>
-  </div>
 
-  <div class="progress">
-    <div id="progressBar"></div>
-  </div>
+    <div class="hero-decoration">
+      <div class="math-card">
+        <span>رياضيات</span>
+        <strong>∑ π √</strong>
+        <small>المعرفة تصنع التميز</small>
+      </div>
+      <div class="floating-symbol symbol-one">+</div>
+      <div class="floating-symbol symbol-two">÷</div>
+      <div class="floating-symbol symbol-three">×</div>
+    </div>
 
-  <div id="questions"></div>
+  </section>
 
-  <div class="actions">
-    <button id="prevBtn" class="secondary">السابق</button>
-    <button id="nextBtn" class="primary">التالي</button>
-    <button id="submitBtn" class="primary hidden">إرسال الإجابات</button>
-  </div>
+  <!-- EXAM INFORMATION -->
+  <section class="feature-grid">
 
-  <p class="muted small">
-    تأكد من إرفاق صور الأسئلة الأربعة قبل الإرسال.
-    لا يمكنك تعديل الإجابات بعد الإرسال.
-  </p>
+    <div class="feature-card">
+      <span class="feature-icon">📝</span>
+      <strong>17 سؤالاً</strong>
+      <small>اختبار متنوع</small>
+    </div>
 
-</section>
+    <div class="feature-card">
+      <span class="feature-icon">🎯</span>
+      <strong>20 نقطة</strong>
+      <small>العلامة النهائية</small>
+    </div>
 
-<section id="doneCard" class="panel hidden center">
-  <div class="success-icon">✓</div>
-  <h2>تم إرسال إجاباتك بنجاح</h2>
-  <p id="doneText">وصلت إجاباتك إلى الأستاذ.</p>
-  <p class="muted small">شكراً لمشاركتك. يمكنك إغلاق هذه الصفحة.</p>
-</section>
+    <div class="feature-card">
+      <span class="feature-icon">🏆</span>
+      <strong>ترتيب مباشر</strong>
+      <small>تابع تقدمك</small>
+    </div>
 
-<div id="notice" class="notice hidden"></div>
+  </section>
+
+  <!-- STUDENT START -->
+  <section id="startCard" class="panel start-panel">
+
+    <div class="section-heading">
+      <div>
+        <span class="section-label">هيا نبدأ</span>
+        <h2>استعد للاختبار</h2>
+        <p class="muted">أدخل معلوماتك للانتقال إلى الاختبار.</p>
+      </div>
+      <span class="heading-icon">✎</span>
+    </div>
+
+    <button id="showRankingBtn" class="secondary ranking-entry">
+      🏆 عرض ترتيب الأقسام
+    </button>
+
+    <div class="form-divider"></div>
+
+    <label for="studentName">الاسم واللقب الكامل</label>
+    <input
+      id="studentName"
+      maxlength="100"
+      placeholder="اكتب اسمك ولقبك"
+      autocomplete="name"
+    >
+
+    <label for="studentClass">اختر قسمك</label>
+    <select id="studentClass" required>
+      <option value="">-- اختر القسم --</option>
+      <option value="Class 9">Class 9</option>
+      <option value="Class 10">Class 10</option>
+      <option value="Class 11">Class 11</option>
+      <option value="Class 12">Class 12</option>
+    </select>
+
+    <button id="startBtn" class="primary start-button">
+      ابدأ الاختبار <span>←</span>
+    </button>
+
+    <p class="muted small exam-note">
+      يتكون الاختبار من 16 سؤال اختيار من متعدد وسؤال تطبيقي واحد.
+    </p>
+
+  </section>
+
+  <!-- PUBLIC RANKING -->
+  <section id="rankingCard" class="panel hidden">
+
+    <div class="section-heading">
+      <div>
+        <span class="section-label">المنافسة</span>
+        <h2>🏆 ترتيب التلاميذ</h2>
+        <p class="muted small">اختر قسمك للاطلاع على النتائج.</p>
+      </div>
+    </div>
+
+    <div id="rankingClasses"></div>
+    <div id="rankingResults"></div>
+
+    <button id="closeRankingBtn" class="secondary">
+      العودة
+    </button>
+
+  </section>
+
+  <!-- EXAM -->
+  <section id="quizCard" class="panel hidden">
+
+    <div class="quiz-head">
+      <div>
+        <span class="muted small">التلميذ</span>
+        <strong id="nameLabel"></strong>
+      </div>
+      <span class="counter" id="progress">1 / 17</span>
+    </div>
+
+    <div class="progress">
+      <div id="progressBar"></div>
+    </div>
+
+    <div id="questions"></div>
+
+    <div class="actions">
+      <button id="prevBtn" class="secondary">السابق</button>
+      <button id="nextBtn" class="primary">التالي</button>
+      <button id="submitBtn" class="primary hidden">إرسال الإجابات</button>
+    </div>
+
+    <p class="muted small">
+      تأكد من إرفاق صورة الحل قبل الإرسال.
+      لا يمكنك تعديل الإجابات بعد الإرسال.
+    </p>
+
+  </section>
+
+  <!-- SUBMISSION SUCCESS -->
+  <section id="doneCard" class="panel hidden center">
+    <div class="success-icon">✓</div>
+    <h2>تم إرسال إجاباتك بنجاح</h2>
+    <p id="doneText">وصلت إجاباتك إلى الأستاذ.</p>
+    <p class="muted small">شكراً لمشاركتك. يمكنك إغلاق هذه الصفحة.</p>
+  </section>
+
+  <div id="notice" class="notice hidden"></div>
 
 </main>
 
-<footer>Kadri_Class — منصة تعليمية للاختبارات</footer>
+<footer>
+  <strong>Kadri_Class</strong>
+  <p>منصة تعليمية للاختبارات المدرسية</p>
+</footer>
 
 <script type="module" src="student.js"></script>
 
