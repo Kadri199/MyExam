@@ -867,3 +867,38 @@ body.student-home {
   height: 2px;
   background: #d5e0d7;
 }
+
+/* Center the exam bank and all of its contents */
+#examBankPublic,
+#examBankAdmin {
+  text-align: center;
+}
+
+#bankTermTabs {
+  justify-content: center;
+}
+
+#bankGallery > article {
+  max-width: 850px;
+  margin: 14px auto;
+  text-align: center;
+}
+
+#bankGallery [data-exam-group] {
+  text-align: center !important;
+}
+
+#bankGallery [data-group-content] {
+  text-align: center;
+}
+
+#bankGallery [data-group-content] img {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+#bankAdminList > div {
+  justify-content: center !important;
+  flex-wrap: wrap;
+}
+
