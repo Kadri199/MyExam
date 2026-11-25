@@ -71,14 +71,14 @@ import { getFirestore, collection, addDoc, getDocs, query, orderBy, limit, serve
 import { firebaseConfig } from "./firebase-config.js";
 const app=initializeApp(firebaseConfig),db=getFirestore(app),$=id=>document.getElementById(id);
 let questionNumber=1,correct=0,score=0,distance=0,locked=false,finished=false,currentAnswer="",currentOptions=[];
-const types=["حوّل الكسر إلى عدد عشري","حوّل العدد العشري إلى كسر","اختر الكسر المكافئ","قارن بين عددين عشريين","رتّب الأعداد تصاعدياً"];
+const types=["حوّل الكسر إلى عدد عشري","حوّل العدد العشري إلى كسر","اختر الكسر المكافئ","قارن بين عددين عشريين","رتّب الكسور العشرية تصاعدياً"];
 const rand=n=>Math.floor(Math.random()*n),pick=a=>a[rand(a.length)];
 function makeDecimal(){const digits=1+rand(3),den=10**digits,num=1+rand(den-1);return {num,den,digits,text:(num/den).toFixed(digits)}}
 function frac(n,d){return n+"/"+d}
 function mathHtml(value){
  const escapeHtml=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
  return String(value).split(/(\d+\s*\/\s*\d+|\d+\.\d+|[<>=≠])/g).map(part=>{
-  if(/^\d+\s*\/\s*\d+$/.test(part)){const [n,d]=part.split("/").map(x=>x.trim());return "\\(\frac{"+n+"}{"+d+"}\\)";}
+  if(/^\d+\s*\/\s*\d+$/.test(part)){const [n,d]=part.split("/").map(x=>x.trim());return "\\(\\frac{"+n+"}{"+d+"}\\)";}
   if(/^\d+\.\d+$/.test(part)||/^[<>=≠]$/.test(part))return "\\("+part+"\\)";
   return escapeHtml(part);
  }).join("");
@@ -96,7 +96,7 @@ function makeQuestion(){
  if(kind===1){const x=makeDecimal();prompt="اكتب العدد العشري على شكل كسر عشري.";question=x.text;answer=frac(x.num,x.den);opts=uniqueOptions(answer,[frac(x.num+1,x.den),frac(Math.max(1,x.num-1),x.den),frac(x.num,x.den*10)]);}
  if(kind===2){const x=makeDecimal(),factor=pick([10,100]);prompt="أي كسر يساوي هذا الكسر؟";question=frac(x.num,x.den);answer=frac(x.num*factor,x.den*factor);opts=uniqueOptions(answer,[frac(x.num+1,x.den),frac(x.num*factor,x.den),frac(x.num,x.den*factor)]);}
  if(kind===3){const x=makeDecimal(),y=makeDecimal();prompt="اختر العلاقة الصحيحة بين العددين.";question=x.text+"  ؟  "+y.text;answer=x.num/x.den>y.num/y.den?">":x.num/x.den<y.num/y.den?"<":"=";opts=[">","<","=","≠"].sort(()=>Math.random()-.5);}
- if(kind===4){let vals=[makeDecimal(),makeDecimal(),makeDecimal()];while(new Set(vals.map(v=>v.text)).size<3)vals=[makeDecimal(),makeDecimal(),makeDecimal()];const sorted=[...vals].sort((a,b)=>a.num/a.den-b.num/b.den);prompt="اختر الترتيب من الأصغر إلى الأكبر.";question=vals.map(v=>v.text).join(" ، ");answer=sorted.map(v=>v.text).join(" < ");opts=uniqueOptions(answer,[vals.map(v=>v.text).join(" < "),[...sorted].reverse().map(v=>v.text).join(" < "),[vals[1],vals[2],vals[0]].map(v=>v.text).join(" < ")]);}
+ if(kind===4){let vals=[makeDecimal(),makeDecimal(),makeDecimal()];while(new Set(vals.map(v=>v.text)).size<3)vals=[makeDecimal(),makeDecimal(),makeDecimal()];const sorted=[...vals].sort((a,b)=>a.num/a.den-b.num/b.den);prompt="اختر الترتيب من الأصغر إلى الأكبر.";question=vals.map(v=>frac(v.num,v.den)).join(" ، ");answer=sorted.map(v=>frac(v.num,v.den)).join(" < ");opts=uniqueOptions(answer,[vals.map(v=>frac(v.num,v.den)).join(" < "),[...sorted].reverse().map(v=>frac(v.num,v.den)).join(" < "),[vals[1],vals[2],vals[0]].map(v=>frac(v.num,v.den)).join(" < ")]);}
  return {kind,prompt,question,answer,opts};
 }
 function renderQuestion(){
