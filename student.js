@@ -191,17 +191,11 @@ students.sort(sortByFinalScore);
   }
 
   let rows = "";
-  let previousFinalScore = null;
-let currentRank = 0;
 
 students.forEach((student, index) => {
   const studentScore = Number(student.score || 0);
-  const finalScore = getFinalScore(student);
-
-  if (finalScore !== previousFinalScore) {
-    currentRank = index + 1;
-    previousFinalScore = finalScore;
-  }
+  // Always show a visible position, including while handwritten marks are pending.
+  const currentRank = index + 1;
 
     const manual = student.handwrittenMark;
 
