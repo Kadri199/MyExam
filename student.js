@@ -162,18 +162,14 @@ function getRankMedal(rank) {
   return "";
 }
 
+// Use the corrected /20 mark when available; otherwise rank provisionally by MCQ /16.
+function getRankingScore(student) {
+  const manual = student.handwrittenMark;
+  return Number(student.score || 0) + (manual === null || manual === undefined || manual === "" ? 0 : Number(manual));
+}
+
 function sortByFinalScore(a, b) {
-  const finalA = getFinalScore(a);
-  const finalB = getFinalScore(b);
-
-  if (finalA === null && finalB !== null) return 1;
-  if (finalA !== null && finalB === null) return -1;
-
-  if (finalA !== finalB) {
-    return (finalB ?? 0) - (finalA ?? 0);
-  }
-
-  return Number(b.score || 0) - Number(a.score || 0);
+  return getRankingScore(b) - getRankingScore(a);
 }
 
 // Render public ranking.
@@ -217,7 +213,7 @@ students.forEach((student, index) => {
     rows += `
       <tr>
         <td style="padding:10px;text-align:center;">
-          ${currentRank} ${finalScore === null ? "" : getRankMedal(currentRank)}
+          ${currentRank} ${getRankMedal(currentRank)}
         </td>
 
         <td style="padding:10px;">
@@ -421,30 +417,23 @@ async function openStudentProfile() {
         collection(db, "publicRankings"),
         where("studentClass", "==", studentClass)
       ));
-      const classmates = classSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+      const classmates = classSnap.docs
+        .map(d => ({ id: d.id, ...d.data() }))
+        .filter(item => (item.testId || "wazifa2") === publishedTestId);
       classmates.sort(sortByFinalScore);
       let previous = null;
       let rankNumber = 0;
+      let rank = "—";
       classmates.forEach((item, index) => {
-        const score = getFinalScore(item);
+        const score = getRankingScore(item);
         if (score !== previous) {
           rankNumber = index + 1;
           previous = score;
         }
+        if (item.studentUid === user.uid || item.id === user.uid + "__" + publishedTestId || item.id === user.uid) {
+          rank = rankNumber;
+        }
       });
-      const myRank = classmates.findIndex(item => item.id === user.uid);
-      let rank = "—";
-      if (myRank >= 0 && final !== null) {
-        let prev = null;
-        classmates.forEach((item, index) => {
-          const score = getFinalScore(item);
-          if (score !== prev) {
-            rankNumber = index + 1;
-            prev = score;
-          }
-          if (item.id === user.uid) rank = rankNumber;
-        });
-      }
 
       const mcq = Number(data.score || 0);
       const manual = data.handwrittenMark;
@@ -454,7 +443,7 @@ async function openStudentProfile() {
           <p>الاختيار من متعدد: <strong>${mcq} / 16</strong></p>
           <p>السؤال التطبيقي: <strong>${manual == null ? "بانتظار تصحيح الأستاذ" : Number(manual) + " / 4"}</strong></p>
           <p>العلامة النهائية: <strong>${bestMark}</strong></p>
-          <p>ترتيبك في القسم: <strong>${rank} ${typeof rank === "number" ? getRankMedal(rank) : ""}</strong></p>
+          <p>ترتيبك في القسم: <strong>${rank} ${typeof rank === "number" ? getRankMedal(rank) : ""}</strong> ${final === null ? '<small>(ترتيب مؤقت حسب علامة الاختيار من متعدد)</small>' : ""}</p>
           <p>الجائزة: <strong>${typeof rank === "number" ? (getRankMedal(rank) || "لا توجد ميدالية حالياً") : "بانتظار ترتيبك"}</strong></p>
         </div>`;
     }
@@ -766,7 +755,7 @@ students.forEach((student, index) => {
 
       rows += `
         <tr style="${isCurrentStudent ? "background:#e8f5e9;font-weight:bold;" : ""}">
-          <td style="padding:10px;text-align:center;">${currentRank} ${finalScore === null ? "" : getRankMedal(currentRank)}</td>
+          <td style="padding:10px;text-align:center;">${currentRank} ${getRankMedal(currentRank)}</td>
           <td style="padding:10px;">${esc(student.name)}${isCurrentStudent ? " (أنت)" : ""}</td>
           <td style="padding:10px;text-align:center;direction:ltr;">${studentScore}/16</td>
           <td style="padding:10px;text-align:center;direction:ltr;">${finalMark}</td>
