@@ -77,14 +77,17 @@ function makeDecimal(){const digits=1+rand(3),den=10**digits,num=1+rand(den-1);r
 function frac(n,d){return n+"/"+d}
 function mathHtml(value){
  const escapeHtml=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
- return String(value).split(/(\\d+\\s*\\/\\s*\\d+|\\d+\\.\\d+|[<>=≠])/g).map(part=>{
-  if(/^\\d+\\s*\\/\\s*\\d+$/.test(part)){const [n,d]=part.split("/").map(x=>x.trim());return "\\\\(\\\\frac{"+n+"}{"+d+"}\\\\)";}
-  if(/^\\d+\\.\\d+$/.test(part)||/^[<>=≠]$/.test(part))return "\\\\("+part+"\\\\)";
+ return String(value).split(/(\d+\s*\/\s*\d+|\d+\.\d+|[<>=≠])/g).map(part=>{
+  if(/^\d+\s*\/\s*\d+$/.test(part)){const [n,d]=part.split("/").map(x=>x.trim());return "\\(\frac{"+n+"}{"+d+"}\\)";}
+  if(/^\d+\.\d+$/.test(part)||/^[<>=≠]$/.test(part))return "\\("+part+"\\)";
   return escapeHtml(part);
  }).join("");
 }
 function typesetMath(elements){
- if(window.MathJax?.typesetPromise)window.MathJax.typesetPromise(elements).catch(err=>console.error("Math rendering error:",err));
+ if(window.MathJax?.typesetPromise){
+  try{window.MathJax.typesetClear?.(elements);window.MathJax.typesetPromise(elements).catch(err=>console.error("Math rendering error:",err));}
+  catch(err){console.error("Math rendering error:",err);}
+ }
 }
 function uniqueOptions(correctValue,others){const out=[String(correctValue)];for(const x of others){const s=String(x);if(!out.includes(s)&&out.length<4)out.push(s)}let n=1;while(out.length<4){const s="0."+String(n++).padStart(3,"0");if(!out.includes(s))out.push(s)}return out.sort(()=>Math.random()-.5)}
 function makeQuestion(){
