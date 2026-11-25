@@ -473,6 +473,7 @@ async function openStudentProfile() {
       ${resultHtml}
       <div id="profileExamNotice" class="notice hidden" role="alert" aria-live="polite" style="margin:16px 0;"></div>
     `;
+    $("studentProfileCard").scrollIntoView({ behavior: "smooth", block: "start" });
 
     if ($("profileStartExamBtn")) $("profileStartExamBtn").onclick = async () => {
       const button = $("profileStartExamBtn");
