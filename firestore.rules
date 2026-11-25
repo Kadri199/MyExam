@@ -25,7 +25,8 @@ service cloud.firestore {
         ];
       allow read: if request.auth != null
         && (request.auth.uid == studentUid || isTeacher());
-      allow update, delete: if false;
+      allow update: if false;
+      allow delete: if isTeacher();
     }
 
     match /settings/quiz { allow read: if true; allow write: if isTeacher(); }
