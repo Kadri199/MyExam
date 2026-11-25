@@ -60,7 +60,7 @@ button:disabled{opacity:.5;cursor:not-allowed}
 <div id="finish" class="hidden">
 <div style="font-size:3rem">🏆</div><h2 id="finishTitle">انتهى التحدي!</h2>
 <p id="finalText" class="sub"></p>
-<p class="sub">اكتب اسمك حتى نسجّل نتيجتك في لوحة أفضل 3 لاعبين.</p>
+<p class="sub">اكتب اسمك حتى نسجّل نتيجتك في لوحة أفضل 10 لاعبين.</p>
 <form id="saveForm">
 <input id="playerName" type="text" maxlength="50" minlength="2" placeholder="اكتب اسمك" autocomplete="name" required>
 <div id="saveStatus" aria-live="polite"></div>
@@ -69,7 +69,7 @@ button:disabled{opacity:.5;cursor:not-allowed}
 </div>
 </section>
 <section class="card" id="leaderboard">
-<h2>🏆 أفضل 3 لاعبين</h2>
+<h2>🏆 أفضل 10 لاعبين</h2>
 <p class="sub">أعلى النتائج في تحدّي الضرب</p>
 <div id="topPlayers"><p class="sub">جارٍ تحميل الترتيب...</p></div>
 </section>
@@ -162,7 +162,7 @@ $("again").addEventListener("click",()=>{
 });
 async function loadTopPlayers(){
   try{
-    const scoresQuery=query(collection(db,"multiplicationScores"),orderBy("score","desc"),limit(3));
+    const scoresQuery=query(collection(db,"multiplicationScores"),orderBy("score","desc"),limit(10));
     const snapshot=await getDocs(scoresQuery);
     if(snapshot.empty){
       $("topPlayers").innerHTML='<p class="sub">لا توجد نتائج بعد. كن أول بطل! 🚀</p>';
@@ -172,7 +172,7 @@ async function loadTopPlayers(){
     $("topPlayers").innerHTML=snapshot.docs.map((item,index)=>{
       const data=item.data();
       const safeName=String(data.name||"لاعب").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-      return '<div class="score-row"><span class="rank">'+medals[index]+'</span><strong>'+safeName+'</strong><strong>'+Number(data.score||0)+' نقطة</strong></div>';
+      return '<div class="score-row"><span class="rank">'+(medals[index]||('#'+(index+1)))+'</span><strong>'+safeName+'</strong><strong>'+Number(data.score||0)+' نقطة</strong></div>';
     }).join("");
   }catch(error){
     console.error(error);
