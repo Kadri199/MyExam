@@ -508,8 +508,8 @@ $("closeStudentProfileBtn").onclick = () => {
 function setAuthMode(mode) {
   authMode = mode;
   $("authSubmitBtn").textContent = mode === "register"
-    ? "إنشاء الحساب وبدء الاختبار ←"
-    : "الدخول وبدء الاختبار ←";
+    ? "إنشاء الحساب"
+    : "تسجيل الدخول";
   $("registerModeBtn").textContent = mode === "register"
     ? "لديك حساب بالفعل؟ تسجيل الدخول"
     : "ليس لديك حساب؟ إنشاء حساب جديد";
@@ -609,7 +609,7 @@ $("authSubmitBtn").onclick = async () => {
       studentClass = profileData.studentClass;
     }
 
-    await beginStudentExam();
+    await openStudentProfile();
   } catch (error) {
     console.error("Student account error:", error);
     const messages = {
@@ -628,13 +628,15 @@ $("authSubmitBtn").onclick = async () => {
 };
 
 onAuthStateChanged(auth, async user => {
-  $("studentProfileBtn").classList.toggle("hidden", !user || user.email?.toLowerCase() === "afterdark706@gmail.com");
-  if (!user || user.email?.toLowerCase() === "afterdark706@gmail.com") return;
+  const isStudent = !!user && user.email?.toLowerCase() !== "afterdark706@gmail.com";
+  $("studentProfileBtn").classList.toggle("hidden", !isStudent);
+  if (!isStudent) return;
   try {
     const profile = await getDoc(doc(db, "studentProfiles", user.uid));
     if (profile.exists()) {
       name = profile.data().name;
       studentClass = profile.data().studentClass;
+      await openStudentProfile();
     }
   } catch (error) {
     console.warn("Could not restore student profile:", error);
