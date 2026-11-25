@@ -816,3 +816,54 @@ body.exam-mode .wrap {
   max-width: 900px;
   margin-top: 18px;
 }
+
+
+/* Student-facing page: calm, high-contrast colours and clearer borders */
+body.student-home {
+  background: #f3f7f3;
+  color: #20352b;
+}
+.student-home .panel {
+  background: #fffefa;
+  border: 2px solid #c5d3c8;
+  box-shadow: 0 5px 18px rgba(35, 65, 45, .06);
+}
+.student-home .start-panel {
+  border: 3px solid #a9c2ae;
+  background: #fffefa;
+}
+.student-home input,
+.student-home select,
+.student-home textarea {
+  border: 2px solid #b8c9bd;
+  background: #ffffff;
+  color: #20352b;
+}
+.student-home input:focus,
+.student-home select:focus,
+.student-home textarea:focus {
+  outline: 3px solid #dcebdd;
+  border-color: #477b57;
+}
+.student-home button:not(.auth-register-link) {
+  border: 2px solid rgba(31, 66, 43, .22);
+}
+.student-home .primary {
+  border-color: #1d4f32 !important;
+}
+.student-home .secondary {
+  border-color: #9fb9a5 !important;
+}
+.student-home .option {
+  border: 2px solid #c5d3c8;
+  background: #fffefa;
+}
+.student-home .profile-result,
+.student-home .profile-item {
+  border: 2px solid #c5d3c8;
+  background: #f8fbf7;
+}
+.student-home .form-divider {
+  height: 2px;
+  background: #d5e0d7;
+}
