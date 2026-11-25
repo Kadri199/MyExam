@@ -472,8 +472,29 @@ async function openStudentProfile() {
       <h3>📖 سجل الوظائف المنجزة</h3>
       ${resultHtml}
       <div id="profileExamNotice" class="notice hidden" role="alert" aria-live="polite" style="margin:16px 0;"></div>
+      <button id="studentLogoutBtn" class="secondary" type="button" style="width:100%;margin-top:18px;border:2px solid #b45353;color:#9b2c2c;">تسجيل الخروج</button>
     `;
     $("studentProfileCard").scrollIntoView({ behavior: "smooth", block: "start" });
+
+    $("studentLogoutBtn").onclick = async () => {
+      const button = $("studentLogoutBtn");
+      button.disabled = true;
+      try {
+        await signOut(auth);
+        $("studentProfileCard").classList.add("hidden");
+        $("startCard").classList.remove("hidden");
+        $("studentProfileContent").innerHTML = "";
+        $("studentName").value = "";
+        $("studentPin").value = "";
+        setAuthMode("login");
+      } catch (error) {
+        console.error("Student logout error:", error);
+        const message = $("profileExamNotice");
+        message.textContent = "تعذر تسجيل الخروج. حاول مجدداً.";
+        message.classList.remove("hidden");
+        button.disabled = false;
+      }
+    };
 
     if ($("profileStartExamBtn")) $("profileStartExamBtn").onclick = async () => {
       const button = $("profileStartExamBtn");
