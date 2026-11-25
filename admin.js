@@ -3,7 +3,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/fireba
 
 import {
   getFirestore, doc, getDoc, setDoc,
-  collection, getDocs, query, orderBy,
+  collection, getDocs, query, orderBy, where, deleteDoc,
   updateDoc, deleteField
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
@@ -240,9 +240,60 @@ function renderStudentPins() {
           <td>${esc(p.name || "—")}</td>
           <td>${esc(String(p.studentClass || "").replace("Class ", "1م"))}</td>
           <td><strong style="direction:ltr;display:inline-block;">${p.pin ? esc(p.pin) : "غير متوفر — حساب قديم"}</strong></td>
+          <td><button type="button" class="danger account-delete-btn" data-delete-student="${esc(p.id)}" title="حذف الحساب" aria-label="حذف حساب ${esc(p.name || "التلميذ")}">🗑️</button></td>
         </tr>
       `).join("")
-    : '<tr><td colspan="3">لا توجد نتائج مطابقة.</td></tr>';
+    : '<tr><td colspan="4">لا توجد نتائج مطابقة.</td></tr>';
+  $("studentPinsBody").querySelectorAll("[data-delete-student]").forEach(button => {
+    button.addEventListener("click", () => deleteStudentAccount(button.dataset.deleteStudent, button));
+  });
+}
+
+async function deleteStudentAccount(uid, button) {
+  const pupil = studentProfiles.find(p => p.id === uid);
+  if (!pupil) return;
+  const label = pupil.name || "هذا التلميذ";
+  const confirmed = confirm(
+    "حذف حساب التلميذ نهائياً؟\\n\\n" +
+    "الاسم: " + label + "\\n" +
+    "القسم: " + String(pupil.studentClass || "").replace("Class ", "1م") + "\\n\\n" +
+    "سيتم حذف ملفه من Firestore، وجميع مشاركاته وصور الحلول، وسجلات ترتيبه العام.\\n" +
+    "لا يمكن التراجع عن هذه العملية.\\n\\nهل تريد المتابعة؟"
+  );
+  if (!confirmed) return;
+
+  button.disabled = true;
+  button.textContent = "…";
+  try {
+    const submissionsSnap = await getDocs(query(
+      collection(db, "submissions"), where("studentUid", "==", uid)
+    ));
+    for (const submission of submissionsSnap.docs) {
+      const imagesSnap = await getDocs(collection(db, "submissions", submission.id, "images"));
+      for (const imageDoc of imagesSnap.docs) await deleteDoc(imageDoc.ref);
+      await deleteDoc(submission.ref);
+    }
+
+    const rankingsSnap = await getDocs(query(
+      collection(db, "publicRankings"), where("studentUid", "==", uid)
+    ));
+    for (const ranking of rankingsSnap.docs) await deleteDoc(ranking.ref);
+
+    // Also remove the legacy ranking document used by the original single-test setup.
+    await deleteDoc(doc(db, "publicRankings", uid));
+    await deleteDoc(doc(db, "studentProfiles", uid));
+
+    studentProfiles = studentProfiles.filter(p => p.id !== uid);
+    submissions = submissions.filter(s => s.studentUid !== uid);
+    renderStudentPins();
+    if (typeof renderClassRanking === "function") renderClassRanking();
+    notice("تم حذف بيانات التلميذ ومشاركاته وترتيبه من Firestore. حساب تسجيل الدخول في Firebase Authentication لم يُحذف.");
+  } catch (error) {
+    console.error("Student account deletion error:", error);
+    notice("تعذر إكمال الحذف: " + error.message + ". تحقق من قواعد Firestore.");
+    button.disabled = false;
+    button.textContent = "🗑️";
+  }
 }
 
 $("studentPinSearch").addEventListener("input", renderStudentPins);
