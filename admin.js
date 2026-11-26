@@ -28,8 +28,19 @@ let selectedTestId="wazifa2";
 const classes = ["Class 9", "Class 10", "Class 11", "Class 12"];
 
 function notice(t) {
-  $("notice").textContent = t;
-  $("notice").classList.remove("hidden");
+  let noticeBox = $("notice");
+  if (!noticeBox) {
+    noticeBox = document.createElement("div");
+    noticeBox.id = "notice";
+    noticeBox.className = "notice";
+    document.querySelector("main")?.appendChild(noticeBox);
+  }
+  if (!noticeBox) {
+    console.error("Kadri_Class notice:", t);
+    return;
+  }
+  noticeBox.textContent = t;
+  noticeBox.classList.remove("hidden");
 }
 
 function esc(s) {
