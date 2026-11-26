@@ -154,6 +154,106 @@ async function loadActiveTest() {
   }
 }
 
+$("exportExamPdfBtn").onclick = exportSelectedExamPdf;
+
+function printableQuestionText(value) {
+  // Keep line breaks and MathJax delimiters, but do not allow arbitrary HTML.
+  return esc(value)
+    .replace(/&lt;br\\s*\\/?&gt;/gi, "<br>")
+    .replace(/\\n/g, "<br>");
+}
+
+async function exportSelectedExamPdf() {
+  // Open synchronously from the click so the browser does not block the print window.
+  const printWindow = window.open("", "_blank");
+  if (!printWindow) {
+    alert("يرجى السماح بفتح النوافذ المنبثقة لتحميل الاختبار.");
+    return;
+  }
+
+  printWindow.document.write(`
+    <!doctype html><html lang="ar" dir="rtl"><head>
+      <meta charset="UTF-8">
+      <title>تحميل الاختبار PDF</title>
+      <style>
+        @page { size: A4; margin: 15mm; }
+        body { font-family: Arial, Tahoma, sans-serif; direction: rtl; color:#111; line-height:1.8; }
+        h1 { text-align:center; font-size:21px; margin:0 0 5px; }
+        .subtitle { text-align:center; margin:0 0 22px; color:#444; }
+        .question { border:1px solid #999; border-radius:8px; padding:12px 15px; margin:0 0 13px; break-inside:avoid; }
+        .question-title { font-weight:bold; margin-bottom:7px; }
+        .choice { margin:4px 0; padding-right:12px; }
+        .geometry-image { display:block; max-width:100%; max-height:430px; object-fit:contain; margin:12px auto; }
+        .question-text { white-space:normal; }
+        @media print { body { -webkit-print-color-adjust:exact; print-color-adjust:exact; } }
+      </style>
+      <script>
+        window.MathJax = { tex: { inlineMath: [['\\\\(','\\\\)'], ['\\\\[','\\\\]']] }, options: { skipHtmlTags: ['script','noscript','style','textarea','pre'] } };
+      <\/script>
+      <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"><\/script>
+    </head><body>
+      <p>جارٍ تحميل الاختبار...</p>
+    </body></html>
+  `);
+  printWindow.document.close();
+
+  try {
+    const examSnap = await getDoc(doc(db, "examTests", selectedTestId));
+    if (!examSnap.exists()) throw new Error("الاختبار المحدد غير موجود.");
+    const exam = examSnap.data();
+    const mcq = Array.isArray(exam.mcq) ? exam.mcq : [];
+    const imageQuestions = Array.isArray(exam.imageQuestions) ? exam.imageQuestions : [];
+
+    const mcqHtml = mcq.map((question, index) => `
+      <section class="question">
+        <div class="question-title">السؤال ${index + 1}:</div>
+        <div class="question-text">${printableQuestionText(question.q || "")}</div>
+        <div class="choices">
+          ${(Array.isArray(question.options) ? question.options : []).map((option, optionIndex) => `
+            <div class="choice">${["أ","ب","ج","د"][optionIndex] || (optionIndex + 1)} ) ${printableQuestionText(option)}</div>
+          `).join("")}
+        </div>
+      </section>
+    `).join("");
+
+    const imageHtml = imageQuestions.map((question, index) => {
+      const image = question.imageUrl
+        ? `<img class="geometry-image" src="${esc(new URL(question.imageUrl, location.href).href)}" alt="صورة السؤال">`
+        : "";
+      return `
+        <section class="question">
+          <div class="question-title">السؤال ${mcq.length + index + 1}:</div>
+          <div class="question-text">${printableQuestionText(question.q || "")}</div>
+          ${image}
+        </section>
+      `;
+    }).join("");
+
+    const html = `
+      <h1>${esc(exam.title || "اختبار الرياضيات")}</h1>
+      <p class="subtitle">الاسم واللقب: ........................................　 القسم: ................　 التاريخ: ................</p>
+      ${mcqHtml}${imageHtml}
+    `;
+
+    printWindow.document.body.innerHTML = html;
+    const images = Array.from(printWindow.document.images);
+    await Promise.all(images.map(img => img.complete ? Promise.resolve() : new Promise(resolve => {
+      img.onload = resolve;
+      img.onerror = resolve;
+    })));
+
+    const startPrint = () => printWindow.print();
+    if (printWindow.MathJax?.typesetPromise) {
+      try { await printWindow.MathJax.typesetPromise(); } catch (error) { console.warn("MathJax print rendering:", error); }
+    }
+    setTimeout(startPrint, 500);
+  } catch (error) {
+    printWindow.document.body.innerHTML = "<p dir='rtl'>تعذر إنشاء نسخة الاختبار: " + esc(error.message) + "</p>";
+    console.error("Exam PDF export error:", error);
+    notice("تعذر إنشاء PDF الاختبار: " + error.message);
+  }
+}
+
 $("refreshBtn").onclick = loadResults;
 
 function createClassFilters() {
