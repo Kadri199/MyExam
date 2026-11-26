@@ -159,8 +159,8 @@ $("exportExamPdfBtn").onclick = exportSelectedExamPdf;
 function printableQuestionText(value) {
   // Keep line breaks and MathJax delimiters, but do not allow arbitrary HTML.
   return esc(value)
-    .replace(/&lt;br\\s*\\/?&gt;/gi, "<br>")
-    .replace(/\\n/g, "<br>");
+    .replace(/&lt;br\s*\/?&gt;/gi, "<br>")
+    .replace(/\n/g, "<br>");
 }
 
 async function exportSelectedExamPdf() {
