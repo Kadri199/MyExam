@@ -981,8 +981,9 @@ body.student-home {
 
 /* Compact teacher dashboard: hero + four expandable cards */
 .teacher-hero{position:relative;padding:26px 30px;margin:24px 0 18px}
-.teacher-logout{margin-top:14px;background:rgba(255,255,255,.14);color:#fff;border:1px solid rgba(255,255,255,.35);padding:8px 14px;font-size:12px}
+.teacher-logout{position:absolute;left:24px;top:24px;margin:0;background:rgba(255,255,255,.14);color:#fff;border:1px solid rgba(255,255,255,.35);padding:8px 14px;font-size:12px}
 .teacher-logout:hover{background:rgba(255,255,255,.24)}
+@media(max-width:600px){.teacher-hero{padding-top:72px}.teacher-logout{left:16px;top:16px}}
 .teacher-quicknav{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:0 0 28px}
 .teacher-nav-item{min-width:0;background:transparent;border:0;margin:0;padding:0;box-shadow:none}
 .teacher-nav-item>.teacher-nav-card{width:100%;min-height:86px;list-style:none;cursor:pointer}
