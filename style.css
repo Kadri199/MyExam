@@ -902,3 +902,39 @@ body.student-home {
   flex-wrap: wrap;
 }
 
+
+
+/* Collapsible teacher account and PIN section */
+.account-fold {
+  padding: 0;
+  overflow: hidden;
+}
+.account-fold > summary {
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px 22px;
+  font-weight: 800;
+  color: var(--dark);
+  background: #f5f8fd;
+  border-radius: 12px;
+}
+.account-fold > summary::-webkit-details-marker {
+  display: none;
+}
+.account-fold > summary::after {
+  content: "+";
+  font-size: 24px;
+  line-height: 1;
+  color: var(--blue);
+}
+.account-fold[open] > summary::after {
+  content: "−";
+}
+.account-fold-content {
+  padding: 18px 22px 22px;
+  border-top: 1px solid var(--line);
+}
