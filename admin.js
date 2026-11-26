@@ -313,18 +313,25 @@ function renderClassRanking() {
   if ($("printClassBtn")) {
     $("printClassBtn").textContent = `🖨 طباعة نتائج ${selectedClass}`;
   }
-  $("countAll").textContent = classResults.length;
+  const countAll = $("countAll");
+  if (countAll) countAll.textContent = classResults.length;
 
-  $("avgScore").textContent = classResults.length
-    ? (
-        classResults.reduce((sum, s) => sum + getRankingScore(s), 0) /
-        classResults.length
-      ).toFixed(2)
-    : "—";
+  const avgScore = $("avgScore");
+  if (avgScore) {
+    avgScore.textContent = classResults.length
+      ? (
+          classResults.reduce((sum, s) => sum + getRankingScore(s), 0) /
+          classResults.length
+        ).toFixed(2)
+      : "—";
+  }
 
-  $("topScore").textContent = classResults.length
-    ? `${getRankingScore(classResults[0]).toFixed(2)} / 20`
-    : "—";
+  const topScore = $("topScore");
+  if (topScore) {
+    topScore.textContent = classResults.length
+      ? `${getRankingScore(classResults[0]).toFixed(2)} / 20`
+      : "—";
+  }
 
   $("resultsBody").innerHTML = classResults.length
     ? classResults.map(s => {
