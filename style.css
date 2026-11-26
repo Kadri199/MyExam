@@ -977,3 +977,24 @@ body.student-home {
 .teacher-nav-card small{font-size:9px}
 .teacher-section-heading{align-items:flex-start;flex-direction:column}
 }
+
+
+/* Compact teacher dashboard: hero + four expandable cards */
+.teacher-hero{position:relative;padding:26px 30px;margin:24px 0 18px}
+.teacher-logout{margin-top:14px;background:rgba(255,255,255,.14);color:#fff;border:1px solid rgba(255,255,255,.35);padding:8px 14px;font-size:12px}
+.teacher-logout:hover{background:rgba(255,255,255,.24)}
+.teacher-quicknav{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:0 0 28px}
+.teacher-nav-item{min-width:0;background:transparent;border:0;margin:0;padding:0;box-shadow:none}
+.teacher-nav-item>.teacher-nav-card{width:100%;min-height:86px;list-style:none;cursor:pointer}
+.teacher-nav-item>.teacher-nav-card::-webkit-details-marker{display:none}
+.teacher-nav-item>.teacher-nav-card::marker{content:""}
+.teacher-nav-item>.teacher-nav-card>b{font-size:23px;transition:transform .15s}
+.teacher-nav-item[open]>.teacher-nav-card{border-color:#8bb4f3;background:#f5f9ff;border-radius:15px 15px 0 0}
+.teacher-nav-item[open]>.teacher-nav-card>b{transform:rotate(45deg)}
+.teacher-module-content{background:#fff;border:1px solid #9bbcf5;border-top:0;border-radius:0 0 15px 15px;padding:8px 14px 14px;box-shadow:0 8px 20px rgba(37,99,235,.07)}
+.teacher-module-content>.panel,.teacher-module-content .panel{margin:0;padding:12px 6px;border:0;box-shadow:none}
+.teacher-module-content .account-fold{border:1px solid var(--line);margin:0}
+.teacher-module-content .account-fold-content{padding:12px 4px}
+.teacher-module-content #resultsPanel{overflow:visible}
+.teacher-module-content table{min-width:680px}
+@media(max-width:600px){.teacher-hero{padding:22px 19px}.teacher-quicknav{grid-template-columns:1fr;gap:10px}.teacher-nav-item>.teacher-nav-card{min-height:72px}.teacher-module-content{padding:7px}}
