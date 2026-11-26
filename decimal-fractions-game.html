@@ -116,7 +116,27 @@ function endGame(reason){if(finished)return;finished=true;$("play").classList.ad
 $("leave").addEventListener("click",()=>endGame("leave"));
 $("saveForm").addEventListener("submit",async e=>{e.preventDefault();const name=$("playerName").value.trim().replace(/\s+/g," ");if(name.length<2){$("saveStatus").textContent="اكتب اسمك بشكل صحيح.";return}$("saveBtn").disabled=true;$("saveStatus").textContent="جارٍ حفظ نتيجتك...";try{await addDoc(collection(db,"decimalFractionScores"),{name,score,correct,distance,createdAt:serverTimestamp()});$("saveStatus").textContent="تم تسجيل نتيجتك بنجاح! بالتوفيق 🏆";await loadTopPlayers()}catch(err){console.error(err);$("saveStatus").textContent="تعذّر حفظ النتيجة. تحقق من الاتصال وحاول مجدداً.";$("saveBtn").disabled=false}});
 $("again").addEventListener("click",()=>{questionNumber=1;correct=0;score=0;distance=0;locked=false;finished=false;$("finish").classList.add("hidden");$("play").classList.remove("hidden");renderQuestion()});
-async function loadTopPlayers(){try{const snap=await getDocs(query(collection(db,"decimalFractionScores"),orderBy("score","desc"),limit(10)));if(snap.empty){$("topPlayers").innerHTML='<p class="sub">لا توجد نتائج بعد. كن أول بطل! 🚀</p>';return}const medals=["🥇","🥈","🥉"];$("topPlayers").innerHTML=snap.docs.map((doc,i)=>{const d=doc.data(),safe=String(d.name||"متسابق").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));return '<div class="score-row"><span class="rank">'+(medals[i]||('#'+(i+1)))+'</span><strong>'+safe+'</strong><strong>'+(Number(d.distance||0)/1000).toFixed(2)+' كم'</strong></div>'}).join("")}catch(err){console.error(err);$("topPlayers").innerHTML='<p class="sub">تعذّر تحميل الترتيب حالياً.</p>'}}
+function renderTopPlayers(rows){
+ if(!rows.length){$("topPlayers").innerHTML='<p class="sub">لا توجد نتائج بعد. كن أول بطل! 🚀</p>';return;}
+ const medals=["🥇","🥈","🥉"];
+ $("topPlayers").innerHTML=rows.map((d,i)=>{
+  const safe=String(d.name||"متسابق").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  return '<div class="score-row"><span class="rank">'+(medals[i]||('#'+(i+1)))+'</span><strong>'+safe+'</strong><strong>'+(Number(d.distance||0)/1000).toFixed(2)+' كم</strong></div>';
+ }).join("");
+}
+async function loadTopPlayers(){
+ const cacheKey="kadri_fraction_top10_v1";
+ try{const cached=JSON.parse(localStorage.getItem(cacheKey)||"[]");if(Array.isArray(cached)&&cached.length)renderTopPlayers(cached);}catch(_){}
+ try{
+  const snap=await getDocs(query(collection(db,"decimalFractionScores"),orderBy("score","desc"),limit(10)));
+  const rows=snap.docs.map(doc=>{const d=doc.data();return {name:String(d.name||"متسابق"),distance:Number(d.distance||0)};});
+  renderTopPlayers(rows);
+  try{localStorage.setItem(cacheKey,JSON.stringify(rows));}catch(_){}
+ }catch(err){
+  console.error(err);
+  if(!$("topPlayers").children.length)$("topPlayers").innerHTML='<p class="sub">تعذّر تحديث الترتيب. ستظهر آخر النتائج المحفوظة عند توفرها.</p>';
+ }
+}
 renderQuestion();loadTopPlayers();
 </script>
 </body>
