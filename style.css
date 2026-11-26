@@ -938,3 +938,42 @@ body.student-home {
   padding: 18px 22px 22px;
   border-top: 1px solid var(--line);
 }
+
+
+/* Teacher dashboard refresh */
+.teacher-hero{display:flex;align-items:center;justify-content:space-between;gap:24px;padding:30px 34px;margin:24px 0 18px;border-radius:20px;color:#fff;background:linear-gradient(120deg,#102b50 0%,#1d4ed8 100%);box-shadow:0 12px 28px rgba(16,43,80,.14)}
+.teacher-hero h1{margin:8px 0 5px;font-size:clamp(25px,4vw,34px);color:#fff}
+.teacher-hero p{margin:0;color:#dbeafe}
+.teacher-eyebrow,.teacher-section-kicker{font-size:11px;font-weight:900;letter-spacing:.04em;color:#bfdbfe}
+.teacher-hero-mark{width:78px;height:78px;flex:0 0 78px;border-radius:22px;display:grid;place-items:center;background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.25);font-size:43px;font-weight:900;color:#fff}
+.teacher-stats{margin:16px 0 20px}
+.teacher-stats .stat{box-shadow:0 5px 18px rgba(20,43,74,.04)}
+.teacher-quicknav{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:18px 0 22px}
+.teacher-nav-card{display:flex;align-items:center;gap:11px;min-width:0;padding:15px 13px;background:#fff;border:1px solid var(--line);border-radius:15px;box-shadow:0 5px 18px rgba(20,43,74,.035);color:var(--ink);transition:transform .15s,border-color .15s,box-shadow .15s}
+.teacher-nav-card:hover{transform:translateY(-2px);border-color:#9bbcf5;box-shadow:0 9px 22px rgba(37,99,235,.09)}
+.teacher-nav-icon{width:42px;height:42px;flex:0 0 42px;display:grid;place-items:center;border-radius:12px;background:var(--pale);font-size:21px}
+.teacher-nav-card span:nth-child(2){min-width:0;flex:1}
+.teacher-nav-card strong,.teacher-nav-card small{display:block}
+.teacher-nav-card strong{font-size:13px;color:var(--dark)}
+.teacher-nav-card small{font-size:10px;color:var(--muted);line-height:1.5;margin-top:3px}
+.teacher-nav-card>b{color:var(--blue);font-size:19px}
+.teacher-section,.teacher-bank-fold{scroll-margin-top:18px}
+.teacher-section-heading{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:18px}
+.teacher-section-heading h2{margin:4px 0;color:var(--dark)}
+.teacher-section-heading p{margin:0}
+.teacher-section-kicker{color:var(--blue)}
+.teacher-subheading{font-size:16px;color:var(--dark)}
+.teacher-settings h2{margin:4px 0 8px}
+#studentPinsPanel{scroll-margin-top:18px}
+#resultsPanel .toolbar{margin-bottom:12px}
+@media(max-width:900px){.teacher-quicknav{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){
+.teacher-hero{padding:23px 20px}
+.teacher-hero-mark{width:56px;height:56px;flex-basis:56px;font-size:31px;border-radius:16px}
+.teacher-quicknav{gap:8px}
+.teacher-nav-card{padding:11px 9px;gap:8px}
+.teacher-nav-icon{width:35px;height:35px;flex-basis:35px;font-size:18px}
+.teacher-nav-card strong{font-size:11px}
+.teacher-nav-card small{font-size:9px}
+.teacher-section-heading{align-items:flex-start;flex-direction:column}
+}
