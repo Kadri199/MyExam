@@ -101,7 +101,6 @@ function nextQuestion(){
   $("feedback").textContent="";
   answered=false;
   updateStats();
-  $("answer").focus();
 }
 function endGame(reason){
   if(finished)return;
@@ -160,23 +159,25 @@ $("again").addEventListener("click",()=>{
   $("play").classList.remove("hidden");
   nextQuestion();
 });
+function renderTopPlayers(rows){
+  if(!rows.length){$("topPlayers").innerHTML='<p class="sub">لا توجد نتائج بعد. كن أول بطل! 🚀</p>';return;}
+  const medals=["🥇","🥈","🥉"];
+  $("topPlayers").innerHTML=rows.map((data,index)=>{
+    const safeName=String(data.name||"لاعب").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+    return '<div class="score-row"><span class="rank">'+(medals[index]||('#'+(index+1)))+'</span><strong>'+safeName+'</strong><strong>'+Number(data.score||0)+' نقطة</strong></div>';
+  }).join("");
+}
 async function loadTopPlayers(){
+  const cacheKey="kadri_multiplication_top10_v1";
+  try{const cached=JSON.parse(localStorage.getItem(cacheKey)||"[]");if(Array.isArray(cached)&&cached.length)renderTopPlayers(cached);}catch(_){}
   try{
-    const scoresQuery=query(collection(db,"multiplicationScores"),orderBy("score","desc"),limit(10));
-    const snapshot=await getDocs(scoresQuery);
-    if(snapshot.empty){
-      $("topPlayers").innerHTML='<p class="sub">لا توجد نتائج بعد. كن أول بطل! 🚀</p>';
-      return;
-    }
-    const medals=["🥇","🥈","🥉"];
-    $("topPlayers").innerHTML=snapshot.docs.map((item,index)=>{
-      const data=item.data();
-      const safeName=String(data.name||"لاعب").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-      return '<div class="score-row"><span class="rank">'+(medals[index]||('#'+(index+1)))+'</span><strong>'+safeName+'</strong><strong>'+Number(data.score||0)+' نقطة</strong></div>';
-    }).join("");
+    const snapshot=await getDocs(query(collection(db,"multiplicationScores"),orderBy("score","desc"),limit(10)));
+    const rows=snapshot.docs.map(item=>{const d=item.data();return {name:String(d.name||"لاعب"),score:Number(d.score||0)};});
+    renderTopPlayers(rows);
+    try{localStorage.setItem(cacheKey,JSON.stringify(rows));}catch(_){}
   }catch(error){
     console.error(error);
-    $("topPlayers").innerHTML='<p class="sub">تعذّر تحميل الترتيب حالياً.</p>';
+    if(!$("topPlayers").children.length)$("topPlayers").innerHTML='<p class="sub">تعذّر تحديث الترتيب. ستظهر آخر النتائج المحفوظة عند توفرها.</p>';
   }
 }
 nextQuestion();
