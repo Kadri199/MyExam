@@ -32,10 +32,13 @@
 
 <main class="wrap wide">
 
-<section class="hero">
-  <span class="eyebrow">إدارة الاختبار والنتائج</span>
-  <h1>لوحة تحكم الأستاذ</h1>
-  <p>إدارة الأسئلة ومتابعة إجابات التلاميذ وترتيبهم.</p>
+<section class="teacher-hero">
+  <div>
+    <span class="teacher-eyebrow">مساحة الإدارة الخاصة</span>
+    <h1>مرحباً بك في لوحة الأستاذ</h1>
+    <p>كل أدوات إدارة Kadri_Class في مكان واحد، بتنظيم أوضح ووصول أسرع.</p>
+  </div>
+  <div class="teacher-hero-mark" aria-hidden="true">∑</div>
 </section>
 
 <section id="loginCard" class="panel narrow">
@@ -68,7 +71,7 @@
     <button id="logoutBtn" class="secondary">تسجيل الخروج</button>
   </div>
 
-  <section class="stats">
+  <section class="stats teacher-stats">
     <div class="stat">
       <b id="countAll">0</b>
       <span>عدد المشاركات</span>
@@ -84,6 +87,13 @@
       <span>أعلى علامة</span>
     </div>
   </section>
+
+  <nav class="teacher-quicknav" aria-label="أقسام لوحة الأستاذ">
+    <a class="teacher-nav-card" href="#resultsPanel"><span class="teacher-nav-icon">🏆</span><span><strong>النتائج والترتيب</strong><small>متابعة العلامات وتصحيح الحلول</small></span><b>←</b></a>
+    <a class="teacher-nav-card" href="#settingsPanel"><span class="teacher-nav-icon">⚙️</span><span><strong>إعدادات الاختبارات</strong><small>الأسئلة والمواعيد والنشر</small></span><b>←</b></a>
+    <a class="teacher-nav-card" href="#studentPinsPanel"><span class="teacher-nav-icon">👥</span><span><strong>حسابات التلاميذ</strong><small>الأسماء والأقسام والرموز السرية</small></span><b>←</b></a>
+    <a class="teacher-nav-card" href="#examBankAdmin"><span class="teacher-nav-icon">📚</span><span><strong>بنك الفروض</strong><small>إضافة وتنظيم صور الفروض</small></span><b>←</b></a>
+  </nav>
 
   <details class="panel account-fold" id="studentPinsPanel">
     <summary><span>👥 حسابات التلاميذ والرموز السرية</span></summary>
@@ -104,10 +114,13 @@
     </div>
   </details>
 
-  <section class="panel">
-    <div class="toolbar">
-      <h2>قائمة الترتيب</h2>
+  <section class="panel teacher-section" id="resultsPanel">
+    <div class="teacher-section-heading">
+      <div><span class="teacher-section-kicker">متابعة التلاميذ</span><h2>🏆 النتائج والترتيب</h2><p class="muted small">اختر القسم والاختبار، ثم أدخل علامة الحل الكتابي لتحديث الترتيب النهائي.</p></div>
       <button id="refreshBtn" class="secondary">تحديث النتائج</button>
+    </div>
+    <div class="toolbar">
+      <h2 class="teacher-subheading">قائمة الترتيب</h2>
     </div>
 
     <div class="table-scroll">
@@ -130,15 +143,17 @@
     </div>
   </section>
 
-  <section class="panel">
-    <h2>إعدادات الاختبار</h2>
+  <section class="panel teacher-section teacher-settings" id="settingsPanel">
+    <span class="teacher-section-kicker">إعداد ونشر</span>
+    <h2>⚙️ إعدادات الاختبارات</h2>
     <p class="muted small">افتح صفحة مستقلة لإدارة الاختبارات وتعديل الأسئلة والمواعيد.</p>
     <a href="exam-editor.html" class="primary" style="display:inline-block;text-decoration:none;text-align:center;padding:12px 20px;border-radius:8px;">⚙️ فتح إعدادات الاختبار وتحرير الأسئلة</a>
   </section>
 
 
-  <section class="panel" id="examBankAdmin">
-    <h2>📚 بنك الفروض والاختبارات</h2>
+  <details class="panel account-fold teacher-bank-fold" id="examBankAdmin">
+    <summary><span>📚 بنك الفروض والاختبارات</span></summary>
+    <div class="account-fold-content">
     <p class="muted small">ارفع صور الفروض والاختبارات حسب الفصل. يمكن للتلاميذ مشاهدتها وتنزيلها.</p>
     <label for="bankTrimester">الفصل الدراسي</label>
     <select id="bankTrimester">
@@ -153,7 +168,8 @@
     <button id="uploadBankBtn" class="primary" type="button">رفع الصور</button>
     <p id="bankUploadStatus" class="muted small" aria-live="polite"></p>
     <div id="bankAdminList"></div>
-  </section>
+    </div>
+  </details>
 
 </div>
 
