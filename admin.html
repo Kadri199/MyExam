@@ -85,22 +85,24 @@
     </div>
   </section>
 
-  <section class="panel" id="studentPinsPanel">
-    <h2>حسابات التلاميذ والرموز السرية</h2>
-    <p class="muted small">هذه القائمة خاصة بالأستاذ. استعملها لمساعدة التلميذ إذا نسي رمزه السري، ولا تشارك الرموز مع الآخرين.</p>
-    <label for="studentPinSearch">ابحث بالاسم أو القسم</label>
-    <input id="studentPinSearch" type="search" placeholder="اكتب اسم التلميذ أو القسم">
-    <div class="toolbar" style="margin-top:10px;">
-      <span class="muted small">الرموز المسجلة في ملفات التلاميذ</span>
-      <button id="refreshStudentPinsBtn" class="secondary" type="button">تحديث القائمة</button>
+  <details class="panel account-fold" id="studentPinsPanel">
+    <summary><span>👥 حسابات التلاميذ والرموز السرية</span></summary>
+    <div class="account-fold-content">
+      <p class="muted small">هذه القائمة خاصة بالأستاذ. استعملها لمساعدة التلميذ إذا نسي رمزه السري، ولا تشارك الرموز مع الآخرين.</p>
+      <label for="studentPinSearch">ابحث بالاسم أو القسم</label>
+      <input id="studentPinSearch" type="search" placeholder="اكتب اسم التلميذ أو القسم">
+      <div class="toolbar" style="margin-top:10px;">
+        <span class="muted small">الرموز المسجلة في ملفات التلاميذ</span>
+        <button id="refreshStudentPinsBtn" class="secondary" type="button">تحديث القائمة</button>
+      </div>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>اسم التلميذ</th><th>القسم</th><th>الرمز السري PIN</th><th>حذف</th></tr></thead>
+          <tbody id="studentPinsBody"><tr><td colspan="4">جارٍ تحميل القائمة...</td></tr></tbody>
+        </table>
+      </div>
     </div>
-    <div class="table-scroll">
-      <table>
-        <thead><tr><th>اسم التلميذ</th><th>القسم</th><th>الرمز السري PIN</th><th>حذف</th></tr></thead>
-        <tbody id="studentPinsBody"><tr><td colspan="4">جارٍ تحميل القائمة...</td></tr></tbody>
-      </table>
-    </div>
-  </section>
+  </details>
 
   <section class="panel">
     <div class="toolbar">
