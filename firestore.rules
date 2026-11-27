@@ -30,7 +30,8 @@ service cloud.firestore {
     }
 
     match /announcements/{announcementId} {
-      allow read: if request.auth != null;
+      // Announcements are public so pupils can read them before signing in.
+      allow read: if true;
       allow create: if isTeacher()
         && request.resource.data.keys().hasOnly(['title', 'message', 'createdAt'])
         && request.resource.data.title is string
