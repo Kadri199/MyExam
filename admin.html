@@ -119,6 +119,21 @@
     <button id="exportExamPdfBtn" class="secondary" type="button" style="margin:8px 0 14px;">📄 تحميل الاختبار PDF</button>
     <a href="exam-editor.html" class="primary" style="display:inline-block;text-decoration:none;text-align:center;padding:12px 20px;border-radius:8px;">⚙️ فتح إعدادات الاختبار وتحرير الأسئلة</a>
   </section></div></details>
+<details class="teacher-nav-item" name="teacher-sections" id="announcementsNav">
+<summary class="teacher-nav-card"><span class="teacher-nav-icon">📢</span><span><strong>الإشعارات الهامة</strong><small>نشر تنبيهات للتلاميذ</small></span><b>＋</b></summary>
+<div class="teacher-module-content"><section class="panel teacher-section" id="announcementsPanel">
+  <span class="teacher-section-kicker">التواصل مع التلاميذ</span>
+  <h2>📢 نشر إشعار هام</h2>
+  <p class="muted small">سيظهر كل إشعار منشور باللون الأحمر داخل ملفات التلاميذ.</p>
+  <label for="announcementTitle">عنوان الإشعار</label>
+  <input id="announcementTitle" type="text" maxlength="100" placeholder="مثلاً: تغيير موعد الاختبار">
+  <label for="announcementMessage">نص الإشعار</label>
+  <textarea id="announcementMessage" rows="4" maxlength="1500" placeholder="اكتب تفاصيل الإعلان هنا..."></textarea>
+  <button id="publishAnnouncementBtn" class="primary" type="button" style="margin-top:12px;">نشر الإشعار للتلاميذ</button>
+  <p id="announcementStatus" class="muted small" aria-live="polite"></p>
+  <h3 style="margin-top:22px;">الإشعارات المنشورة</h3>
+  <div id="adminAnnouncementsList"><p class="muted small">جارٍ تحميل الإشعارات...</p></div>
+</section></div></details>
 <details class="teacher-nav-item" name="teacher-sections" id="accountsNav">
 <summary class="teacher-nav-card"><span class="teacher-nav-icon">👥</span><span><strong>حسابات التلاميذ</strong><small>الأسماء والأقسام والرموز السرية</small></span><b>＋</b></summary>
 <div class="teacher-module-content"><details class="panel account-fold" id="studentPinsPanel">
