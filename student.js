@@ -442,6 +442,33 @@ async function openStudentProfile() {
         </div>`;
     }
 
+    let announcementsHtml = '<div style="border:2px solid #dc2626;background:#fff1f2;color:#b91c1c;border-radius:12px;padding:14px;margin:12px 0;"><strong>لا توجد إشعارات جديدة من الأستاذ.</strong></div>';
+    try {
+      const announcementsSnap = await getDocs(collection(db, "announcements"));
+      const announcements = announcementsSnap.docs
+        .map(d => ({ id: d.id, ...d.data() }))
+        .sort((a, b) => {
+          const time = value => value?.toMillis?.() ?? (value?.seconds ? value.seconds * 1000 : 0);
+          return time(b.createdAt) - time(a.createdAt);
+        });
+      announcementsHtml = announcements.length
+        ? announcements.map(item => {
+            const date = item.createdAt?.toDate
+              ? item.createdAt.toDate().toLocaleString("ar-DZ")
+              : "";
+            return `
+              <article style="border:2px solid #dc2626;background:#fff1f2;color:#b91c1c;border-radius:12px;padding:14px;margin:10px 0;">
+                <h3 style="margin:0 0 8px;color:#b91c1c;">📢 ${esc(item.title || "إشعار هام")}</h3>
+                <p style="margin:0;color:#b91c1c;white-space:pre-wrap;line-height:1.8;">${esc(item.message || "")}</p>
+                ${date ? `<small style="display:block;margin-top:8px;color:#991b1b;">${esc(date)}</small>` : ""}
+              </article>`;
+          }).join("")
+        : '<div style="border:2px solid #dc2626;background:#fff1f2;color:#b91c1c;border-radius:12px;padding:14px;margin:12px 0;"><strong>لا توجد إشعارات جديدة من الأستاذ.</strong></div>';
+    } catch (error) {
+      console.error("Student announcements loading error:", error);
+      announcementsHtml = '<p class="muted small">تعذر تحميل الإشعارات حالياً.</p>';
+    }
+
     $("studentProfileContent").innerHTML = `
       <div class="profile-grid">
         <div class="profile-item"><span>الاسم واللقب</span><strong>${esc(name)}</strong></div>
@@ -450,6 +477,8 @@ async function openStudentProfile() {
         <div class="profile-item"><span>الاختبارات المكتملة</span><strong>${completed}</strong></div>
         <div class="profile-item"><span>أفضل علامة مسجلة</span><strong>${bestMark}</strong></div>
       </div>
+      <h3 style="color:#b91c1c;">📢 إشعارات هامة من الأستاذ</h3>
+      ${announcementsHtml}
       <h3>📚 الوظائف</h3>
       ${publishedHtml}
       <h3>📖 سجل الوظائف المنجزة</h3>
