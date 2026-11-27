@@ -4,7 +4,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/fireba
 import {
   getFirestore, doc, getDoc, setDoc,
   collection, getDocs, query, orderBy, where, deleteDoc,
-  updateDoc, deleteField
+  updateDoc, deleteField, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 import {
@@ -136,9 +136,85 @@ async function loadAll() {
   await Promise.allSettled([
     loadActiveTest(),
     loadResults(),
-    loadStudentPins()
+    loadStudentPins(),
+    loadAnnouncements()
   ]);
 }
+
+async function loadAnnouncements() {
+  const list = $("adminAnnouncementsList");
+  if (!list) return;
+  list.innerHTML = '<p class="muted small">جارٍ تحميل الإشعارات...</p>';
+  try {
+    const snap = await getDocs(collection(db, "announcements"));
+    const items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const stamp = value => value?.toMillis?.() ?? (value?.seconds ? value.seconds * 1000 : 0);
+    items.sort((a, b) => stamp(b.createdAt) - stamp(a.createdAt));
+    if (!items.length) {
+      list.innerHTML = '<p class="muted small">لا توجد إشعارات منشورة حالياً.</p>';
+      return;
+    }
+    list.innerHTML = items.map(item => {
+      const date = item.createdAt?.toDate
+        ? item.createdAt.toDate().toLocaleString("ar-DZ")
+        : "—";
+      return `
+        <article style="border:2px solid #dc2626;background:#fff1f2;color:#b91c1c;border-radius:12px;padding:14px;margin:10px 0;">
+          <div style="font-weight:800;font-size:1.05rem;">${esc(item.title || "إشعار هام")}</div>
+          <p style="white-space:pre-wrap;margin:8px 0;color:#b91c1c;">${esc(item.message || "")}</p>
+          <small style="color:#991b1b;">${esc(date)}</small>
+          <button type="button" class="danger" data-delete-announcement="${esc(item.id)}" style="display:block;margin-top:10px;">حذف الإشعار</button>
+        </article>`;
+    }).join("");
+    list.querySelectorAll("[data-delete-announcement]").forEach(button => {
+      button.onclick = async () => {
+        if (!confirm("هل تريد حذف هذا الإشعار من ملفات التلاميذ؟")) return;
+        button.disabled = true;
+        try {
+          await deleteDoc(doc(db, "announcements", button.dataset.deleteAnnouncement));
+          await loadAnnouncements();
+          notice("تم حذف الإشعار.");
+        } catch (error) {
+          button.disabled = false;
+          notice("تعذر حذف الإشعار: " + error.message);
+        }
+      };
+    });
+  } catch (error) {
+    console.error("Announcements loading error:", error);
+    list.innerHTML = '<p class="muted small">تعذر تحميل الإشعارات. تحقق من صلاحيات Firestore.</p>';
+  }
+}
+
+$("publishAnnouncementBtn").onclick = async () => {
+  const title = $("announcementTitle").value.trim();
+  const message = $("announcementMessage").value.trim();
+  const button = $("publishAnnouncementBtn");
+  const status = $("announcementStatus");
+  if (title.length < 3) {
+    status.textContent = "اكتب عنواناً واضحاً (3 أحرف على الأقل).";
+    return;
+  }
+  if (!message) {
+    status.textContent = "اكتب نص الإشعار قبل النشر.";
+    return;
+  }
+  button.disabled = true;
+  status.textContent = "جارٍ نشر الإشعار...";
+  try {
+    const ref = doc(collection(db, "announcements"));
+    await setDoc(ref, { title, message, createdAt: serverTimestamp() });
+    $("announcementTitle").value = "";
+    $("announcementMessage").value = "";
+    status.textContent = "تم نشر الإشعار وظهر في ملفات التلاميذ.";
+    await loadAnnouncements();
+  } catch (error) {
+    console.error("Announcement publish error:", error);
+    status.textContent = "تعذر النشر: " + error.message;
+  } finally {
+    button.disabled = false;
+  }
+};
 
 async function loadActiveTest() {
   try {
