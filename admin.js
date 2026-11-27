@@ -330,7 +330,18 @@ async function loadResults() {
 async function loadStudentPins() {
   try {
     const snap = await getDocs(collection(db, "studentProfiles"));
-    studentProfiles = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const timestampValue = value => {
+      if (!value) return 0;
+      if (typeof value.toMillis === "function") return value.toMillis();
+      if (typeof value.seconds === "number") return value.seconds * 1000;
+      if (value instanceof Date) return value.getTime();
+      if (typeof value === "number") return value;
+      const parsed = Date.parse(value);
+      return Number.isFinite(parsed) ? parsed : 0;
+    };
+    studentProfiles = snap.docs
+      .map(d => ({ id: d.id, ...d.data() }))
+      .sort((a, b) => timestampValue(b.createdAt) - timestampValue(a.createdAt));
     renderStudentPins();
   } catch (error) {
     console.error("Student PIN list error:", error);
