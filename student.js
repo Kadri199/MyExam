@@ -55,6 +55,40 @@ function esc(value) {
   }[c]));
 }
 
+// Public announcements are visible to every visitor, even before login.
+// Keep the list live so new teacher posts appear without refreshing.
+function watchHomeAnnouncements() {
+  const container = $("homeAnnouncementsList");
+  if (!container) return;
+
+  onSnapshot(collection(db, "announcements"), snapshot => {
+    const announcements = snapshot.docs
+      .map(d => ({ id: d.id, ...d.data() }))
+      .sort((a, b) => {
+        const time = value => value?.toMillis?.() ?? (value?.seconds ? value.seconds * 1000 : 0);
+        return time(b.createdAt) - time(a.createdAt);
+      });
+
+    container.innerHTML = announcements.length
+      ? announcements.map(item => {
+          const date = item.createdAt?.toDate
+            ? item.createdAt.toDate().toLocaleString("ar-DZ")
+            : "";
+          return `
+            <article style="padding:12px 0;border-top:1px solid #7f1d1d;color:#ef4444;">
+              <h3 style="margin:0 0 5px;color:#ef4444;font-size:17px;">${esc(item.title || "إشعار هام")}</h3>
+              <p style="margin:0;color:#f87171;white-space:pre-wrap;line-height:1.8;">${esc(item.message || "")}</p>
+              ${date ? `<small style="display:block;margin-top:6px;color:#fca5a5;">${esc(date)}</small>` : ""}
+            </article>`;
+        }).join("")
+      : '<p style="margin:0;color:#f87171;">لا توجد إشعارات جديدة من الأستاذ حالياً.</p>';
+  }, error => {
+    console.error("Home announcements listener error:", error);
+    container.innerHTML = '<p style="margin:0;color:#f87171;">تعذر تحميل الإشعارات حالياً.</p>';
+  });
+}
+
+
 // Create a private Firebase Auth alias from the pupil's name, class and PIN.
 // Pupils never see or need to enter this generated alias.
 async function makeStudentAuthEmail(fullName, classId, pin) {
@@ -499,6 +533,7 @@ async function openStudentProfile() {
         $("studentName").value = "";
         $("studentPin").value = "";
         setAuthMode("login");
+watchHomeAnnouncements();
       } catch (error) {
         console.error("Student logout error:", error);
         const message = $("profileExamNotice");
