@@ -713,6 +713,7 @@ onAuthStateChanged(auth, async user => {
 });
 
 setAuthMode("login");
+watchHomeAnnouncements();
 
 // Compress the single handwritten solution photo.
 async function compressImage(file) {
