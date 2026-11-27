@@ -1,0 +1,17 @@
+{
+  "appId": "dz.kadri.class",
+  "appName": "Kadri_Class",
+  "webDir": "www",
+  "server": {
+    "url": "https://kadri199.github.io/MyExam/",
+    "cleartext": false,
+    "allowNavigation": [
+      "kadri199.github.io",
+      "myexam.firebaseapp.com",
+      "accounts.google.com"
+    ]
+  },
+  "android": {
+    "allowMixedContent": false
+  }
+}
