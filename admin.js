@@ -13,6 +13,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 import { firebaseConfig } from "./firebase-config.js";
+import { enableKadriNotifications } from "./push-client.js";
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
@@ -909,4 +910,23 @@ async function showDetails(id) {
     console.error(error);
     content.textContent = "حدث خطأ أثناء تحميل الصورة. حاول مجدداً.";
   }
+}
+
+
+const enableTeacherPushBtn = $("enableTeacherPushBtn");
+if (enableTeacherPushBtn) {
+  enableTeacherPushBtn.onclick = async () => {
+    const status = $("teacherPushStatus");
+    enableTeacherPushBtn.disabled = true;
+    status.textContent = "جارٍ طلب الإذن وتسجيل جهاز الأستاذ...";
+    try {
+      await enableKadriNotifications("teacher");
+      status.textContent = "تم تفعيل تسجيل الإشعارات لهذا الجهاز. سنرسل إشعار اختبار بعد اكتمال إعداد الإرسال.";
+      enableTeacherPushBtn.textContent = "الإشعارات مفعّلة";
+    } catch (error) {
+      console.error("Teacher push setup error:", error);
+      status.textContent = error.message || "تعذر تفعيل الإشعارات. حاول مجدداً.";
+      enableTeacherPushBtn.disabled = false;
+    }
+  };
 }
