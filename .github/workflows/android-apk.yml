@@ -77,9 +77,15 @@ jobs:
                   }
               }''', 1)
           if 'signingConfig signingConfigs.release' not in text:
-              text, count = re.subn(r'(buildTypes\\s*\\{\\s*release\\s*\\{)', r'\\1\n            signingConfig signingConfigs.release', text, count=1)
-              if count != 1:
+              build_types = text.find("buildTypes {")
+              release_type = text.find("release {", build_types)
+              if build_types < 0 or release_type < 0:
                   raise SystemExit('Could not find Android release buildType to configure signing')
+              text = text[:release_type] + text[release_type:].replace(
+                  "release {",
+                  "release {\\n            signingConfig signingConfigs.release",
+                  1
+              )
           gradle.write_text(text)
           PY
           python -m pip install --quiet pillow
