@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "69950531358",
+    "project_id": "my-exam-45cac",
+    "storage_bucket": "my-exam-45cac.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:69950531358:android:669e3caa5e10ba35dacb0f",
+        "android_client_info": {
+          "package_name": "dz.kadri.classroom"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDW9yJPtRwGoKGVNVV-Azj1nozdRUHaSYs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
