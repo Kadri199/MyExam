@@ -311,7 +311,44 @@
   <p>منصة تعليمية للاختبارات المدرسية</p>
 </footer>
 
-<script type="module" src="student.js"></script>
+
+<script type="module">
+(async () => {
+  const requiredVersion = "1.0.1";
+  const banner = document.getElementById("appUpdateBanner");
+  const dismiss = document.getElementById("dismissAppUpdateBanner");
+  if (!banner) return;
+  const compareVersions = (a, b) => {
+    const aa = String(a || "0").split(".").map(Number);
+    const bb = String(b || "0").split(".").map(Number);
+    for (let i = 0; i < Math.max(aa.length, bb.length); i++) {
+      const x = aa[i] || 0, y = bb[i] || 0;
+      if (x !== y) return x - y;
+    }
+    return 0;
+  };
+  try {
+    const { Capacitor } = await import("https://esm.sh/@capacitor/core@7.4.3");
+    if (Capacitor.isNativePlatform()) {
+      const { App } = await import("https://esm.sh/@capacitor/app@7.0.0");
+      const installed = await App.getInfo();
+      banner.hidden = compareVersions(installed.version, requiredVersion) >= 0;
+      if (dismiss) dismiss.hidden = true;
+    } else {
+      const key = "kadri-app-update-dismissed-version";
+      banner.hidden = localStorage.getItem(key) === requiredVersion;
+      if (dismiss) dismiss.addEventListener("click", () => {
+        localStorage.setItem(key, requiredVersion);
+        banner.hidden = true;
+      });
+    }
+  } catch (error) {
+    console.warn("App update check unavailable:", error);
+    banner.hidden = false;
+  }
+})();
+</script>
+\n<script type="module" src="student.js"></script>
 <script type="module" src="exam-bank.js"></script>
 
 <script>
