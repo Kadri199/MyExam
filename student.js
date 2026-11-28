@@ -13,6 +13,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 import { firebaseConfig } from "./firebase-config.js";
+import { enableKadriNotifications } from "./push-client.js";
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
@@ -523,7 +524,7 @@ async function openStudentProfile() {
         <div class="profile-item"><span>الاختبارات المكتملة</span><strong>${completed}</strong></div>
         <div class="profile-item"><span>أفضل علامة مسجلة</span><strong>${bestMark}</strong></div>
       </div>
-      <h3 style="color:#b91c1c;">📢 إشعارات هامة من الأستاذ</h3>
+      <div style="margin:14px 0;padding:14px;border:1px solid #93c5fd;border-radius:12px;background:#eff6ff;">\n        <strong>🔔 فعّل إشعارات Kadri_Class</strong>\n        <p class="muted small" style="margin:6px 0 10px;">لتصلك التذكيرات اليومية والإشعارات الهامة والوظائف الجديدة.</p>\n        <button id="enableStudentPushBtn" class="primary" type="button" style="width:100%;">تفعيل الإشعارات</button>\n        <p id="studentPushStatus" class="muted small" aria-live="polite"></p>\n      </div>\n      <h3 style="color:#b91c1c;">📢 إشعارات هامة من الأستاذ</h3>
       ${announcementsHtml}
       <h3>📚 الوظائف</h3>
       ${publishedHtml}
@@ -532,7 +533,7 @@ async function openStudentProfile() {
       <div id="profileExamNotice" class="notice hidden" role="alert" aria-live="polite" style="margin:16px 0;"></div>
       <button id="studentLogoutBtn" class="secondary" type="button" style="width:100%;margin-top:18px;border:2px solid #b45353;color:#9b2c2c;">تسجيل الخروج</button>
     `;
-    $("studentProfileCard").scrollIntoView({ behavior: "smooth", block: "start" });
+    $("studentProfileCard").scrollIntoView({ behavior: "smooth", block: "start" });\n\n    $("enableStudentPushBtn").onclick = async () => {\n      const button = $("enableStudentPushBtn");\n      const status = $("studentPushStatus");\n      button.disabled = true;\n      status.textContent = "جارٍ طلب الإذن وتسجيل جهازك...";\n      try {\n        await enableKadriNotifications("student");\n        status.textContent = "تم تفعيل تسجيل الإشعارات لهذا الجهاز. سنرسل إشعار اختبار بعد اكتمال إعداد الإرسال.";\n        button.textContent = "الإشعارات مفعّلة";\n      } catch (error) {\n        console.error("Student push setup error:", error);\n        status.textContent = error.message || "تعذر تفعيل الإشعارات. حاول مجدداً.";\n        button.disabled = false;\n      }\n    };
 
     $("studentLogoutBtn").onclick = async () => {
       const button = $("studentLogoutBtn");
