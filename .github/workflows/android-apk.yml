@@ -3,7 +3,9 @@ on:
   push:
     branches: [main, master]
     paths:
-      - 'capacitor.config.json'\n      - 'index.html'\n      - 'student.js'
+      - 'capacitor.config.json'
+      - 'index.html'
+      - 'student.js'
       - 'package.json'
       - 'app-icon.jpg'
       - 'google-services.json'
