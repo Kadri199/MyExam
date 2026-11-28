@@ -62,8 +62,8 @@ jobs:
           import re
           gradle = Path("android/app/build.gradle")
           text = gradle.read_text()
-          text = re.sub(r"versionCode\\s+\\d+", "versionCode 2", text, count=1)
-          text = re.sub(r'versionName\\s+"[^"]+"', 'versionName "1.0.1"', text, count=1)
+          text = re.sub(r"versionCode\s+\d+", "versionCode 2", text, count=1)
+          text = re.sub(r'versionName\s+"[^"]+"', 'versionName "1.0.1"', text, count=1)
           gradle.write_text(text)
           PY
           python -m pip install --quiet pillow
