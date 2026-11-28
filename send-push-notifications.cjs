@@ -15,15 +15,15 @@ async function main() {
   const devicesSnap = await db.collection("pushDevices").get();
   const devices = devicesSnap.docs.map(d => ({ ref: d.ref, ...d.data() })).filter(d => typeof d.token === "string" && d.token.length > 20);
 
-  async function sendAll(title, body, tag) {
-    if (!devices.length) {
+  async function sendAll(title, body, tag, targetDevices = devices) {
+    if (!targetDevices.length) {
       console.log("No registered devices; skipped:", tag);
       return 0;
     }
     let success = 0;
     const invalidRefs = [];
-    for (let i = 0; i < devices.length; i += 500) {
-      const batch = devices.slice(i, i + 500);
+    for (let i = 0; i < targetDevices.length; i += 500) {
+      const batch = targetDevices.slice(i, i + 500);
       const response = await messaging.sendEachForMulticast({
         tokens: batch.map(d => d.token),
         notification: { title, body },
@@ -78,10 +78,21 @@ async function main() {
   const examsSnap = await db.doc("settings/exams").get();
   const activeTestId = examsSnap.exists ? (examsSnap.data().activeTestId || "") : "";
   if (activeTestId === "wazifa3" && scheduler.lastWazifa3Notified !== "wazifa3") {
+    // Exclude pupils who have already submitted Wazifa 3; keep teacher devices eligible.
+    const submittedSnap = await db.collection("submissions")
+      .where("testId", "==", "wazifa3")
+      .get();
+    const submittedUids = new Set(
+      submittedSnap.docs.map(doc => doc.data().studentUid).filter(Boolean)
+    );
+    const wazifa3Devices = devices.filter(device =>
+      device.role === "teacher" || !submittedUids.has(device.uid)
+    );
     const sent = await sendAll(
       "📝 تم نشر الوظيفة 03",
       "الوظيفة 03 متاحة الآن على Kadri_Class. ادخل إلى ملفك الشخصي وابدأ الإنجاز!",
-      "wazifa3"
+      "wazifa3",
+      wazifa3Devices
     );
     if (sent > 0) await schedulerRef.set({ lastWazifa3Notified: "wazifa3" }, { merge: true });
   }
