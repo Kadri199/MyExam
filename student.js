@@ -285,7 +285,19 @@ students.forEach((student, index) => {
 $("showRankingBtn").onclick = async () => {
   stopRankingListener();
   let rankingTests=[{id:"wazifa2",title:"وظيفة 2"}];
-  try { const meta=await getDoc(doc(db,"settings","exams")); if(meta.exists() && Array.isArray(meta.data().tests)) rankingTests=meta.data().tests; } catch(e){ console.warn(e); }
+  let activeRankingTestId="wazifa2";
+  try {
+    const metaSnap=await getDoc(doc(db,"settings","exams"));
+    if(metaSnap.exists()) {
+      const metaData=metaSnap.data();
+      if(Array.isArray(metaData.tests) && metaData.tests.length) rankingTests=metaData.tests;
+      // Always open the public ranking on the currently active/published exam.
+      activeRankingTestId=metaData.activeTestId || activeRankingTestId;
+    }
+  } catch(e){ console.warn("Could not load active exam for public ranking:",e); }
+  if(!rankingTests.some(t=>t.id===activeRankingTestId)) {
+    rankingTests.unshift({id:activeRankingTestId,title:activeRankingTestId==="wazifa3"?"وظيفة 3":"الاختبار النشط"});
+  }
 
   $("startCard").classList.add("hidden");
   $("rankingCard").classList.remove("hidden");
@@ -294,7 +306,7 @@ $("showRankingBtn").onclick = async () => {
   $("rankingClasses").innerHTML = `
     <label for="rankingTestSelect">اختر الاختبار</label>
     <select id="rankingTestSelect" style="width:100%;margin-bottom:12px;">
-      ${rankingTests.map(t=>`<option value="${esc(t.id)}">${esc(t.title)}</option>`).join("")}
+      ${rankingTests.map(t=>`<option value="${esc(t.id)}" ${t.id===activeRankingTestId?"selected":""}>${esc(t.title)}</option>`).join("")}
     </select>
     <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:18px 0;">
       ${classes.map(className => `
