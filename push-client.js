@@ -26,6 +26,7 @@ async function enableNative(role) {
   let permission = await PushNotifications.checkPermissions();
   if (permission.receive !== "granted") permission = await PushNotifications.requestPermissions();
   if (permission.receive !== "granted") throw new Error("لم تسمح بإرسال الإشعارات. يمكنك تفعيلها من إعدادات الهاتف.");
+  await PushNotifications.createChannel({ id: "kadri-class", name: "Kadri_Class", description: "تنبيهات Kadri_Class", importance: 5, visibility: 1, vibration: true });
   await PushNotifications.addListener("registration", async ({ value }) => {
     try {
       await saveToken(value, role, "android");
