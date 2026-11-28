@@ -6,6 +6,9 @@ on:
       - 'capacitor.config.json'
       - 'package.json'
       - 'app-icon.jpg'
+      - 'google-services.json'
+      - 'push-client.js'
+      - 'service-worker.js'
       - '.github/workflows/android-apk.yml'
   workflow_dispatch:
 permissions:
@@ -36,6 +39,23 @@ jobs:
           mkdir -p www
           printf '<!doctype html><html><head><meta charset="utf-8"></head><body>Kadri Class</body></html>' > www/index.html
           npx cap add android
+          cp google-services.json android/app/google-services.json
+          python - <<'PY'
+          from pathlib import Path
+          root = Path("android/build.gradle")
+          root_text = root.read_text()
+          if "com.google.gms:google-services" not in root_text:
+              root_text = root_text.replace(
+                  "dependencies {",
+                  "dependencies {\n        classpath 'com.google.gms:google-services:4.4.2'",
+                  1
+              )
+              root.write_text(root_text)
+          app = Path("android/app/build.gradle")
+          app_text = app.read_text()
+          if "com.google.gms.google-services" not in app_text:
+              app.write_text(app_text + "\napply plugin: 'com.google.gms.google-services'\n")
+          PY
           npx cap sync android
           python -m pip install --quiet pillow
           python - <<'PY'
