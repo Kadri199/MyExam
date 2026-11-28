@@ -14,6 +14,26 @@ service cloud.firestore {
         && request.auth.token.email != 'afterdark706@gmail.com';
     }
 
+
+    // Private FCM registration tokens: each account can manage only its own devices.
+    match /pushDevices/{deviceId} {
+      allow create: if request.auth != null
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.role in ['student', 'teacher']
+        && request.resource.data.platform in ['web', 'android']
+        && request.resource.data.token is string
+        && request.resource.data.token.size() >= 20
+        && (isTeacher() == (request.resource.data.role == 'teacher'));
+      allow update: if request.auth != null
+        && resource.data.uid == request.auth.uid
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.role == resource.data.role
+        && request.resource.data.platform in ['web', 'android']
+        && request.resource.data.token is string;
+      allow read, delete: if request.auth != null
+        && (resource.data.uid == request.auth.uid || isTeacher());
+    }
+
     match /studentProfiles/{studentUid} {
       allow create: if isStudent()
         && request.auth.uid == studentUid
