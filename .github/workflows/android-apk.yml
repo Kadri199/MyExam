@@ -3,7 +3,7 @@ on:
   push:
     branches: [main, master]
     paths:
-      - 'capacitor.config.json'
+      - 'capacitor.config.json'\n      - 'index.html'\n      - 'student.js'
       - 'package.json'
       - 'app-icon.jpg'
       - 'google-services.json'
@@ -57,6 +57,15 @@ jobs:
               app.write_text(app_text + "\napply plugin: 'com.google.gms.google-services'\n")
           PY
           npx cap sync android
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          gradle = Path("android/app/build.gradle")
+          text = gradle.read_text()
+          text = re.sub(r"versionCode\\s+\\d+", "versionCode 2", text, count=1)
+          text = re.sub(r'versionName\\s+"[^"]+"', 'versionName "1.0.1"', text, count=1)
+          gradle.write_text(text)
+          PY
           python -m pip install --quiet pillow
           python - <<'PY'
           from pathlib import Path
