@@ -1065,3 +1065,16 @@ body.student-home {
     min-width: 680px;
   }
 }
+
+
+/* Keep teacher dashboard sections in a single vertical column on all screens. */
+.teacher-quicknav {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  width: 100%;
+}
+.teacher-nav-item,
+.teacher-nav-item > .teacher-nav-card {
+  width: 100%;
+  max-width: 100%;
+}
