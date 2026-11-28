@@ -64,8 +64,22 @@ jobs:
           import re
           gradle = Path("android/app/build.gradle")
           text = gradle.read_text()
-          text = re.sub(r"versionCode\s+\d+", "versionCode 2", text, count=1)
-          text = re.sub(r'versionName\s+"[^"]+"', 'versionName "1.0.1"', text, count=1)
+          text = re.sub(r"versionCode\s+\d+", "versionCode 3", text, count=1)
+          text = re.sub(r'versionName\s+"[^"]+"', 'versionName "1.0.2"', text, count=1)
+          if 'signingConfigs {' not in text:
+              text = text.replace('android {', '''android {
+              signingConfigs {
+                  release {
+                      storeFile file(System.getenv("ANDROID_KEYSTORE_FILE"))
+                      storePassword System.getenv("ANDROID_KEYSTORE_PASSWORD")
+                      keyAlias System.getenv("ANDROID_KEY_ALIAS")
+                      keyPassword System.getenv("ANDROID_KEY_PASSWORD")
+                  }
+              }''', 1)
+          if 'signingConfig signingConfigs.release' not in text:
+              text, count = re.subn(r'(buildTypes\\s*\\{\\s*release\\s*\\{)', r'\\1\n            signingConfig signingConfigs.release', text, count=1)
+              if count != 1:
+                  raise SystemExit('Could not find Android release buildType to configure signing')
           gradle.write_text(text)
           PY
           python -m pip install --quiet pillow
@@ -100,16 +114,28 @@ jobs:
           (values / "ic_launcher_background.xml").write_text(
               '<resources><color name="ic_launcher_background">#0C2D70</color></resources>')
           PY
-      - name: Build APK
+      - name: Decode Android release keystore
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          test -n "$ANDROID_KEYSTORE_BASE64"
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/kadri-class-release.jks"
+          test -s "$RUNNER_TEMP/kadri-class-release.jks"
+      - name: Build signed release APK
+        env:
+          ANDROID_KEYSTORE_FILE: ${{ runner.temp }}/kadri-class-release.jks
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
           cd android
           chmod +x gradlew
-          ./gradlew assembleDebug --stacktrace
+          ./gradlew assembleRelease --stacktrace
       - name: Publish APK download
         uses: softprops/action-gh-release@v2
         with:
           tag_name: android-apk-v1
           name: Kadri_Class Android App
           make_latest: true
-          files: android/app/build/outputs/apk/debug/app-debug.apk
+          files: android/app/build/outputs/apk/release/app-release.apk
           fail_on_unmatched_files: true
