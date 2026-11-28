@@ -1078,3 +1078,89 @@ body.student-home {
   width: 100%;
   max-width: 100%;
 }
+
+/* Public ranking: keep the complete results table inside the screen */
+#rankingCard {
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+#rankingResults {
+  width: 100%;
+  min-width: 0;
+}
+#rankingResults > div {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden !important;
+}
+#rankingResults table {
+  width: 100% !important;
+  min-width: 0 !important;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+#rankingResults th,
+#rankingResults td {
+  overflow-wrap: anywhere;
+  word-break: normal;
+  white-space: normal;
+}
+@media (max-width: 600px) {
+  #rankingCard {
+    padding: 12px 8px;
+    margin-left: 0;
+    margin-right: 0;
+    border-radius: 12px;
+  }
+  #rankingCard .section-heading {
+    margin-bottom: 12px;
+  }
+  #rankingCard .section-heading h2 {
+    font-size: 18px;
+  }
+  #rankingClasses {
+    min-width: 0;
+  }
+  #rankingClasses > div {
+    gap: 6px !important;
+    margin: 12px 0 !important;
+  }
+  #rankingClasses button {
+    min-width: 0;
+    padding: 8px 5px;
+    font-size: 12px;
+  }
+  #rankingResults h3 {
+    font-size: 16px;
+  }
+  #rankingResults th,
+  #rankingResults td {
+    padding: 6px 3px !important;
+    font-size: 10px;
+    line-height: 1.35;
+  }
+  #rankingResults th:nth-child(1),
+  #rankingResults td:nth-child(1) { width: 19%; }
+  #rankingResults th:nth-child(2),
+  #rankingResults td:nth-child(2) { width: 33%; }
+  #rankingResults th:nth-child(3),
+  #rankingResults td:nth-child(3) { width: 20%; }
+  #rankingResults th:nth-child(4),
+  #rankingResults td:nth-child(4) { width: 28%; }
+  #rankingResults th {
+    font-size: 9px;
+    line-height: 1.25;
+  }
+  #closeRankingBtn {
+    width: 100%;
+    margin-top: 12px;
+  }
+}
+@media (max-width: 360px) {
+  #rankingCard { padding-left: 5px; padding-right: 5px; }
+  #rankingResults th,
+  #rankingResults td { padding: 5px 2px !important; font-size: 9px; }
+  #rankingResults th { font-size: 8px; }
+}
+
