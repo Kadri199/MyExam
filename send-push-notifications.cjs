@@ -97,6 +97,44 @@ async function main() {
     if (sent > 0) await schedulerRef.set({ lastWazifa3Notified: "wazifa3" }, { merge: true });
   }
 
+  // Notify teacher devices once for every new pupil submission.
+  // Establish a baseline on first deployment so old submissions do not trigger a flood.
+  const teacherDevices = devices.filter(device => device.role === "teacher");
+  const submissionPushStart = scheduler.teacherSubmissionPushStartedAt?.toMillis?.() ?? 0;
+  if (!submissionPushStart) {
+    await schedulerRef.set({
+      teacherSubmissionPushStartedAt: admin.firestore.Timestamp.fromMillis(now)
+    }, { merge: true });
+    console.log("Teacher submission alerts initialized; existing submissions will not be replayed.");
+  } else if (teacherDevices.length) {
+    const submissionsSnap = await db.collection("submissions").get();
+    const newSubmissions = submissionsSnap.docs.filter(doc => {
+      const data = doc.data();
+      const createdAt = data.createdAt?.toMillis?.() ?? 0;
+      return createdAt >= submissionPushStart && !data.teacherPushSentAt;
+    });
+
+    for (const submissionDoc of newSubmissions) {
+      const item = submissionDoc.data();
+      const pupilName = item.name || "تلميذ";
+      const className = item.studentClass || "";
+      const testName = item.testName || item.testId || "اختبار";
+      const body = pupilName + (className ? " — " + className : "") +
+        " أرسل " + testName + ".";
+      const sent = await sendAll(
+        "📥 إجابة جديدة من تلميذ",
+        body,
+        "pupil-submission-" + submissionDoc.id,
+        teacherDevices
+      );
+      if (sent > 0) {
+        await submissionDoc.ref.update({
+          teacherPushSentAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+      }
+    }
+  }
+
   // Each recent announcement repeats hourly. Deleting its document stops future sends.
   const announcementsSnap = await db.collection("announcements").get();
   for (const announcementDoc of announcementsSnap.docs) {
