@@ -13,7 +13,6 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 import { firebaseConfig } from "./firebase-config.js";
-import { enableKadriNotifications } from "./push-client.js";
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
@@ -920,6 +919,7 @@ if (enableTeacherPushBtn) {
     enableTeacherPushBtn.disabled = true;
     status.textContent = "جارٍ طلب الإذن وتسجيل جهاز الأستاذ...";
     try {
+      const { enableKadriNotifications } = await import("./push-client.js");
       await enableKadriNotifications("teacher");
       status.textContent = "تم تفعيل تسجيل الإشعارات لهذا الجهاز. سنرسل إشعار اختبار بعد اكتمال إعداد الإرسال.";
       enableTeacherPushBtn.textContent = "الإشعارات مفعّلة";
