@@ -27,19 +27,26 @@ async function enableNative(role) {
   if (permission.receive !== "granted") permission = await PushNotifications.requestPermissions();
   if (permission.receive !== "granted") throw new Error("لم تسمح بإرسال الإشعارات. يمكنك تفعيلها من إعدادات الهاتف.");
   await PushNotifications.createChannel({ id: "kadri-class", name: "Kadri_Class", description: "تنبيهات Kadri_Class", importance: 5, visibility: 1, vibration: true });
-  await PushNotifications.addListener("registration", async ({ value }) => {
-    try {
-      await saveToken(value, role, "android");
-      document.dispatchEvent(new CustomEvent("kadri-push-enabled"));
-    } catch (error) { console.error("Saving Android push token failed:", error); }
-  });
-  await PushNotifications.addListener("registrationError", error => {
-    console.error("Android push registration error:", error);
-  });
   await PushNotifications.addListener("pushNotificationReceived", notification => {
     console.info("Kadri_Class notification received:", notification.title || "");
   });
-  await PushNotifications.register();
+  await new Promise(async (resolve, reject) => {
+    await PushNotifications.addListener("registration", async ({ value }) => {
+      try {
+        await saveToken(value, role, "android");
+        document.dispatchEvent(new CustomEvent("kadri-push-enabled"));
+        resolve();
+      } catch (error) {
+        console.error("Saving Android push token failed:", error);
+        reject(error);
+      }
+    });
+    await PushNotifications.addListener("registrationError", error => {
+      console.error("Android push registration error:", error);
+      reject(new Error("تعذر تسجيل الإشعارات على هذا الجهاز."));
+    });
+    await PushNotifications.register();
+  });
 }
 
 async function enableWeb(role) {
