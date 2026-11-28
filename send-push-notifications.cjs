@@ -56,6 +56,14 @@ async function main() {
   const localDate = part("year") + "-" + part("month") + "-" + part("day");
   const localHour = Number(part("hour"));
 
+  if (process.env.SEND_TEST_PUSH === "true") {
+    await sendAll(
+      "🔔 اختبار إشعارات Kadri_Class",
+      "إذا وصلتك هذه الرسالة، فقد نجح إرسال الإشعارات إلى جهازك.",
+      "manual-test-" + now
+    );
+  }
+
   // Daily 19:00 reminder (Algeria time). GitHub's scheduler polls every five minutes.
   if (localHour >= 19 && scheduler.lastDailyDate !== localDate) {
     const sent = await sendAll(
